@@ -1,0 +1,40 @@
+{
+  "name": "dudu-app",
+  "version": "1.0.0",
+  "main": "node_modules/expo/AppEntry.js",
+  "description": "DUDU（嘟嘟）— 基于 HDU Wiki 内容的安卓阅读器",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "web": "expo start --web",
+    "build:content": "node scripts/build-content.mjs",
+    "prebuild": "npm run build:content",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "~52.0.46",
+    "expo-status-bar": "~2.0.1",
+    "expo-web-browser": "~14.0.2",
+    "expo-asset": "~11.0.1",
+    "expo-file-system": "~18.0.12",
+    "expo-clipboard": "~7.0.1",
+    "expo-sharing": "~13.0.1",
+    "expo-linking": "~7.0.5",
+    "expo-constants": "~17.0.8",
+    "react": "18.3.1",
+    "react-native": "0.76.9",
+    "react-native-webview": "13.13.4",
+    "react-native-screens": "~4.10.0",
+    "react-native-safe-area-context": "5.4.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/native-stack": "^7.3.8",
+    "@react-navigation/bottom-tabs": "^7.3.10",
+    "lucide-react-native": "^0.469.0"
+  },
+  "devDependencies": {
+    "@types/react": "~18.3.12",
+    "typescript": "^5.7.2"
+  },
+  "private": true
+}
