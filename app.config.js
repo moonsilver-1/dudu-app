@@ -8,7 +8,7 @@ const config: ExpoConfig = {
   version: "1.0.0",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
+  newArchEnabled: false,
   icon: "./assets/icon.png",
   splash: {
     image: "./assets/splash.png",
