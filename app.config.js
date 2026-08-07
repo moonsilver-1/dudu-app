@@ -27,7 +27,7 @@ const config: ExpoConfig = {
   },
   web: { favicon: "./assets/favicon.png" },
   extra: {
-    eas: { projectId: "dudu-wiki" },
+    eas: { projectId: "0375bcc9-8616-4c70-903a-55faac26019b" },
   },
 };
 
