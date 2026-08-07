@@ -2,7 +2,7 @@ import { ExpoConfig } from "expo/config";
 
 const config: ExpoConfig = {
   name: "嘟嘟 DUDU",
-  slug: "dudu-wiki",
+  slug: "dudu",
   owner: "moonsilver-1s-team",
   scheme: "dudu",
   version: "1.0.0",
