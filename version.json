@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "versionCode": 1,
-  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.0/dudu-release.apk",
-  "changelog": "首发版本 🐑\n- 131 篇 HDU Wiki 文章离线阅读\n- 深度学习 / 算法课程分卷\n- KaTeX 公式、代码高亮、暗色模式\n- 收藏、阅读进度、本地搜索"
+  "version": "1.0.1",
+  "versionCode": 2,
+  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.1/dudu-release.apk",
+  "changelog": "v1.0.1 更新\n- 新增：App 内\"检查更新\"功能（我的 → 更新）\n- 修复：文章正文不显示\n- 修复：课程分类分卷（深度学习/算法）\n- 改进：柔和主题色、首页去紫框、分类可折叠"
 }

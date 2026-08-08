@@ -8,8 +8,8 @@
  */
 
 /** 本地版本（跟 android/app/build.gradle 的 versionCode/versionName 保持一致） */
-export const LOCAL_VERSION = "1.0.0";
-export const LOCAL_VERSION_CODE = 1;
+export const LOCAL_VERSION = "1.0.1";
+export const LOCAL_VERSION_CODE = 2;
 
 /** 版本信息源（jsDelivr CDN，国内友好。带时间戳防缓存） */
 const VERSION_URL =
