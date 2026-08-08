@@ -20,3 +20,24 @@ Thumbs.db
 # keep generated content & styles (needed for build):
 # assets/content.json
 # src/lib/generatedStyles.ts
+
+# android 构建产物（本地产物，不进仓库）
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/captures/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# 不要把签名密钥推到公开仓库（泄露=别人能伪造你的 App）
+android/dudu.keystore
+android/app/dudu.keystore
+
+# 构建日志
+build*.log
+metro*.log
+eas_build.log
+build_out.log

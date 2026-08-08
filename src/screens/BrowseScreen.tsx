@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { ChevronRight, BookOpen, Layers } from "lucide-react-native";
+import { ChevronRight, ChevronDown, BookOpen, Layers } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
 import { radius, spacing, fontSize, fontFamily } from "../theme";
 import {
@@ -142,17 +142,62 @@ export default function BrowseScreen() {
         ) : null}
 
         {category.sections.map((sec) => (
-          <View key={sec.slug}>
-            <Text style={[styles.blockTitle, { color: palette.foreground }]}>{sec.name}</Text>
-            <View style={{ gap: spacing.md }}>
-              {sec.articles.map((a) => (
-                <ArticleCard key={a.slug} article={a} onPress={() => openArticle(a.slug)} accent={accent} />
-              ))}
-            </View>
-          </View>
+          <CollapsibleSection
+            key={sec.slug}
+            title={sec.name}
+            count={sec.articles.length}
+            accent={accent}
+            defaultOpen={false}
+            articles={sec.articles}
+            onOpen={(slug) => openArticle(slug)}
+          />
         ))}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/** 可折叠的子分类区（算法/深度学习这种文章多的 section 默认收起） */
+function CollapsibleSection({
+  title,
+  count,
+  accent,
+  defaultOpen,
+  articles,
+  onOpen,
+}: {
+  title: string;
+  count: number;
+  accent: string;
+  defaultOpen: boolean;
+  articles: ArticleMeta[];
+  onOpen: (slug: string) => void;
+}) {
+  const { palette } = useTheme();
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <View>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => setOpen((v) => !v)}
+        style={[styles.sectionHeader, { borderColor: palette.border }]}
+      >
+        <ChevronDown
+          size={18}
+          color={palette.foregroundMuted}
+          style={{ transform: [{ rotate: open ? "0deg" : "-90deg" }] } as any}
+        />
+        <Text style={[styles.sectionTitleText, { color: palette.foreground }]}>{title}</Text>
+        <Text style={[styles.sectionCount, { color: accent }]}>{count} 篇</Text>
+      </TouchableOpacity>
+      {open ? (
+        <View style={{ gap: spacing.md, marginTop: spacing.md }}>
+          {articles.map((a) => (
+            <ArticleCard key={a.slug} article={a} onPress={() => onOpen(a.slug)} accent={accent} />
+          ))}
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -171,6 +216,15 @@ const styles = StyleSheet.create({
   catRowFoot: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   catRowCount: { fontSize: fontSize.sm, fontWeight: "700" },
   blockTitle: { fontSize: fontSize.lg, fontWeight: "700", flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  sectionTitleText: { flex: 1, fontSize: fontSize.lg, fontWeight: "700" },
+  sectionCount: { fontSize: fontSize.sm, fontWeight: "700" },
   volChip: {
     borderRadius: radius.full,
     borderWidth: 1,

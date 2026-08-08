@@ -28,14 +28,11 @@ const importFromWeb = async (p) => {
   return mod.default ?? mod;
 };
 
-// 复用网站的分类/分卷定义
+// 复用网站的分类/分卷定义。
+// 网站 lib/content.ts 是 TS，Node 无法直接 import。改用「运行时从源码正则提取」
+// 的方式拿到 courseVolumes，比硬编码 fallback 可靠（网站加卷时重跑本脚本即可同步）。
 const webLib = path.join(WEB, "lib");
-const { courseVolumes, CATEGORY_NAMES } = await import(
-  path.join(webLib, "content.ts").replace(/\.ts$/, ".mjs")
-).catch(async () => {
-  // 退回：直接读 ts 源码不便，这里硬编码与网站一致的常量（见 README 说明）
-  return fallbackMeta();
-});
+const { courseVolumes, CATEGORY_NAMES } = readWebContentMeta();
 
 const CONTENT_DIR = path.join(WEB, "content");
 const OUT_JSON = path.join(ROOT, "assets", "content.json");
@@ -197,7 +194,7 @@ const courseVolumesOut = {};
 for (const [cat, vols] of Object.entries(courseVolumes ?? {})) {
   courseVolumesOut[cat] = vols.map((v) => ({
     key: v.key,
-    title: v.title,
+    title: v.label ?? v.title,
     slugs: v.slugs,
   }));
 }
@@ -207,6 +204,8 @@ for (const cat of Object.values(categories)) {
   for (const sec of cat.sections) {
     const knowns = {
       fundamentals: "基础课程",
+      "deep-learning": "深度学习课程",
+      algorithm: "算法课程",
       "campus-life": "校园生活",
       "forced-business": "被迫营业",
       "life-experience": "体验生活",
@@ -305,28 +304,63 @@ export const KATEX_AUTO_RENDER_JS = ${JSON.stringify(autoRenderJs)};
 function readWikiCss() {
   const globals = path.join(WEB, "app", "globals.css");
   const raw = fs.readFileSync(globals, "utf-8");
-  const start = raw.indexOf(".wiki-content");
-  if (start < 0) return "";
-  // 用括号配平只取 .wiki-content { ... } 这一整块
-  let i = raw.indexOf("{", start);
-  if (i < 0) return "";
-  let depth = 0;
-  let end = -1;
-  for (let j = i; j < raw.length; j++) {
-    if (raw[j] === "{") depth++;
-    else if (raw[j] === "}") {
-      depth--;
-      if (depth === 0) {
-        end = j + 1;
-        break;
+  // globals.css 里 .wiki-content 的样式是「一条条独立规则」
+  // （.wiki-content h1 {…}、.wiki-content code {…} 共几十条），
+  // 不是嵌套在一个 {} 里。需要把所有以 .wiki-content 开头的规则块都抓出来。
+  // 思路：逐字符扫描，遇到选择器里含 ".wiki-content" 的规则，
+  // 用括号配平取到它对应的 {} 块，累加。
+  const rules = [];
+  let i = 0;
+  const n = raw.length;
+  while (i < n) {
+    const selStart = i;
+    // 找到下一个 {
+    const brace = raw.indexOf("{", i);
+    if (brace < 0) break;
+    // 选择器文本（从上一个 } 或文件头到这个 { 之间，去掉注释/空白）
+    let selector = raw.slice(selStart, brace);
+    // 去掉块注释 /* */
+    selector = selector.replace(/\/\*[\s\S]*?\*\//g, "");
+    // 选择器是否含 .wiki-content？（去掉 @media 等前置也判断）
+    if (selector.includes(".wiki-content")) {
+      // 用括号配平找到这个规则的结束 }
+      let depth = 1;
+      let j = brace + 1;
+      // 处理嵌套 @media / 嵌套规则
+      let bodyEnd = -1;
+      while (j < n) {
+        if (raw[j] === "{") depth++;
+        else if (raw[j] === "}") {
+          depth--;
+          if (depth === 0) {
+            bodyEnd = j + 1;
+            break;
+          }
+        }
+        j++;
+      }
+      if (bodyEnd > 0) {
+        // 包含可能的前置 @media ... { 包装：取从 selStart 开始到 bodyEnd
+        // 但要跳过开头的前导空白/注释，保留 @media 等包装器
+        let ruleStart = selStart;
+        // 跳过前导空白
+        while (ruleStart < brace && /\s/.test(raw[ruleStart])) ruleStart++;
+        rules.push(raw.slice(ruleStart, bodyEnd));
+        i = bodyEnd;
+        continue;
       }
     }
+    // 否则跳过这个 { ... } 块（用括号配平）
+    let depth = 1;
+    let j = brace + 1;
+    while (j < n && depth > 0) {
+      if (raw[j] === "{") depth++;
+      else if (raw[j] === "}") depth--;
+      j++;
+    }
+    i = j;
   }
-  if (end < 0) return "";
-  let css = raw.slice(start, end);
-  // 去掉可能的 @layer 包裹前缀（保留内部规则）
-  css = css.replace(/@layer\s+[\w-]+\s*\{/, "").replace(/\}\s*$/, "");
-  return css.trim();
+  return rules.join("\n").trim();
 }
 
 function minifyHtml(html) {
@@ -338,6 +372,43 @@ function minifyHtml(html) {
 }
 
 // ---------- 兜底元数据（当无法 import 网站 lib 时） ----------
+/**
+ * 从网站 lib/content.ts 源码运行时提取 courseVolumes 和分类名。
+ * 比 import .ts 可靠（Node 不支持原生 TS）。网站加卷/改分类时重跑本脚本即可同步。
+ */
+function readWebContentMeta() {
+  const tsPath = path.join(webLib, "content.ts");
+  let courseVolumes = {};
+  let CATEGORY_NAMES = {
+    courses: "课程与学术",
+    campus: "校园生活",
+    tech: "技术与项目",
+    community: "社团与活动",
+  };
+  if (fs.existsSync(tsPath)) {
+    const src = fs.readFileSync(tsPath, "utf-8");
+    // 提取 courseVolumes: Record<...> = { ... };
+    const m = src.match(/export const courseVolumes[^=]*=\s*(\{[\s\S]*?\n\});/);
+    if (m) {
+      try {
+        courseVolumes = (new Function("return " + m[1]))();
+      } catch (e) {
+        console.warn("提取 courseVolumes 失败，使用空分卷:", e.message);
+      }
+    }
+    // 提取 CATEGORY_NAMES
+    const mn = src.match(/export const CATEGORY_NAMES[^=]*=\s*(\{[\s\S]*?\n\});/);
+    if (mn) {
+      try {
+        CATEGORY_NAMES = { ...CATEGORY_NAMES, ...(new Function("return " + mn[1]))() };
+      } catch (e) {
+        /* 用默认 */
+      }
+    }
+  }
+  return { courseVolumes, CATEGORY_NAMES };
+}
+
 function fallbackMeta() {
   const courseVolumes = {
     courses: [

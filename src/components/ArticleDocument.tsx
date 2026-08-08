@@ -14,16 +14,33 @@ import {
  * 文章正文渲染器：用 WebView 加载离线 HTML。
  * 样式 = KaTeX(字体已 base64 内联) + highlight 主题 + wiki-content CSS，
  * 完全离线、与网站视觉效果一致。主题色随明暗模式切换。
+ * 标题/作者/标签/正文 全部在一个 WebView 内渲染+滚动，
+ * 这样能正确撑满高度（避免被外层 ScrollView 套住导致高度塌为 0）。
  */
 interface Props {
   html: string;
+  /** 标题/作者/阅读时长/标签——注入到 WebView 顶部，与正文一起渲染 */
+  title: string;
+  author?: string;
+  readingTime?: number;
+  tags?: string[];
   onScrollRatio?: (ratio: number) => void;
   onLinkPress?: (url: string) => void;
 }
 
-const escapeForTemplate = (s: string) => s; // 样式已是安全字符串
+/** 文本转 HTML（防注入 + 换行）。undefined/null 安全。 */
+const esc = (s?: string | null): string =>
+  (s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-export function ArticleDocument({ html, onScrollRatio, onLinkPress }: Props) {
+export function ArticleDocument({
+  html,
+  title,
+  author,
+  readingTime,
+  tags,
+  onScrollRatio,
+  onLinkPress,
+}: Props) {
   const { palette, isDark } = useTheme();
   const { width } = useWindowDimensions();
 
@@ -44,11 +61,30 @@ export function ArticleDocument({ html, onScrollRatio, onLinkPress }: Props) {
       .wiki-content pre{background:${isDark ? "#0e1117" : palette.surfaceMuted};}
       .wiki-content code{background:${isDark ? "rgba(255,255,255,0.06)" : palette.surfaceMuted};}
       .wiki-content blockquote{border-left:4px solid var(--primary);background:var(--surface-muted);}
-      .wiki-content code.language-math{background:none;padding:0;font-family:${"var(--foreground)"};}
+      .wiki-content code.language-math{background:none;padding:0;}
+      /* 文章头部（标题/作者/标签）—— 注入到 WebView 里渲染 */
+      .article-head{padding:0 0 12px;margin-bottom:8px;border-bottom:1px solid var(--border);}
+      .article-head h1{margin:0 0 8px;font-size:1.7rem;line-height:1.35;font-weight:800;color:var(--foreground);}
+      .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--foreground-muted);font-size:13px;margin-top:4px;}
+      .article-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+      .article-tag{font-size:12px;padding:2px 10px;border-radius:999px;background:var(--surface-muted);color:var(--foreground-muted);}
+      body{padding:14px 16px 64px;}
     `;
-    const body = `
-      <article class="wiki-content">${html}</article>
+    // 文章头部 HTML
+    const metaBits: string[] = [];
+    if (author) metaBits.push(`<span>✍ ${esc(author)}</span>`);
+    if (readingTime) metaBits.push(`<span>⏱ ${readingTime} 分钟</span>`);
+    const tagsHtml = (tags && tags.length)
+      ? `<div class="article-tags">${tags.map((t) => `<span class="article-tag">${esc(t)}</span>`).join("")}</div>`
+      : "";
+    const head = `
+      <div class="article-head">
+        <h1>${esc(title)}</h1>
+        ${metaBits.length ? `<div class="article-meta">${metaBits.join("")}</div>` : ""}
+        ${tagsHtml}
+      </div>
     `;
+    const body = `${head}<article class="wiki-content">${html}</article>`;
     const renderScript = `
       (function(){
         function renderMath(){
@@ -86,7 +122,7 @@ export function ArticleDocument({ html, onScrollRatio, onLinkPress }: Props) {
   ${renderScript}
 })();
 </script></body></html>`;
-  }, [html, palette, isDark]);
+  }, [html, title, author, readingTime, tags, palette, isDark]);
 
   return (
     <View style={{ flex: 1, width }}>

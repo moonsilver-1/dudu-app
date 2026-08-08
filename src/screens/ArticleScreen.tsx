@@ -140,24 +140,16 @@ export function ArticleScreen() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
-        <View>
-          <Text style={[styles.title, { color: palette.foreground }]}>{article.title}</Text>
-          <View style={styles.metaRow}>
-            {article.author ? <Text style={[styles.metaText, { color: palette.foregroundMuted }]}>✍ {article.author}</Text> : null}
-            {article.readingTime ? <Text style={[styles.metaText, { color: palette.foregroundMuted }]}>⏱ {article.readingTime} 分钟</Text> : null}
-          </View>
-          {article.tags.length > 0 ? (
-            <View style={styles.tags}>
-              {article.tags.map((t) => (
-                <Pill key={t} label={t} />
-              ))}
-            </View>
-          ) : null}
-        </View>
-        <View style={{ height: 1, backgroundColor: palette.border, marginVertical: spacing.xs }} />
-        <ArticleDocument html={article.html} onScrollRatio={handleScrollRatio} onLinkPress={handleLinkPress} />
-      </ScrollView>
+      {/* 正文：标题/作者/标签 全部注入 WebView 内渲染，WebView 自己滚动，占满剩余空间 */}
+      <ArticleDocument
+        html={article.html}
+        title={article.title}
+        author={article.author}
+        readingTime={article.readingTime}
+        tags={article.tags}
+        onScrollRatio={handleScrollRatio}
+        onLinkPress={handleLinkPress}
+      />
 
       {/* 底部上下篇 */}
       <View style={[styles.bottomBar, { borderColor: palette.border, backgroundColor: palette.surface }]}>

@@ -7,7 +7,6 @@ import {
   School,
   Code2,
   Users,
-  Sparkles,
   ChevronRight,
   type LucideIcon,
 } from "lucide-react-native";
@@ -59,18 +58,16 @@ export default function HomeScreen() {
         contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg }}
         showsVerticalScrollIndicator={false}
       >
-        <Card style={[styles.hero, { backgroundColor: palette.primarySoft }]}>
-          <View style={styles.heroTop}>
-            <Sparkles size={22} color={palette.primary} />
-            <Text style={[styles.heroTitle, { color: palette.foreground }]}>欢迎来到嘟嘟 🐑</Text>
-          </View>
+        {/* 欢迎区：去掉刺眼的彩色大框，改成干净简洁的标题 + 搜索框 */}
+        <View style={styles.hero}>
+          <Text style={[styles.heroTitle, { color: palette.foreground }]}>欢迎来到嘟嘟 🐑</Text>
           <Text style={[styles.heroSub, { color: palette.foregroundMuted }]}>
             共收录 {total} 篇 HDU 知识库文章，随时离线阅读。
           </Text>
           <TouchableOpacity activeOpacity={0.9} onPress={openSearch}>
             <SearchBar value="" onChange={() => {}} placeholder={`搜索 ${total} 篇文章…`} />
           </TouchableOpacity>
-        </Card>
+        </View>
 
         <View>
           <Text style={[styles.sectionTitle, { color: palette.foreground }]}>精选推荐</Text>
@@ -120,9 +117,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing.md },
-  heroTop: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  heroTitle: { fontSize: fontSize.xl, fontWeight: "800" },
+  hero: { gap: spacing.sm, marginBottom: spacing.xs },
+  heroTitle: { fontSize: fontSize.xxl, fontWeight: "800", letterSpacing: 0.2 },
   heroSub: { fontSize: fontSize.sm },
   sectionTitle: { fontSize: fontSize.lg, fontWeight: "700", marginBottom: spacing.xs },
   featureCard: { width: 280 },
