@@ -1,20 +1,48 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Sun, Moon, MoonStar, Info, Github, BookOpen } from "lucide-react-native";
+import { Sun, Moon, MoonStar, Info, Github, BookOpen, RefreshCw, Download } from "lucide-react-native";
+import * as WebBrowser from "expo-web-browser";
 import { useTheme } from "../context/ThemeContext";
 import { radius, spacing, fontSize, fontFamily } from "../theme";
 import { getAllArticles } from "../lib/content";
 import { getReadSet } from "../lib/storage";
 import { Card, ScreenHeader, Pill } from "../components/ui";
+import { checkForUpdate, LOCAL_VERSION } from "../lib/update";
 
 export default function SettingsScreen() {
   const { palette, mode, setPref, pref } = useTheme();
   const [readCount, setReadCount] = useState(0);
+  const [checking, setChecking] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<{ hasUpdate: boolean; version?: string; url?: string; changelog?: string } | null>(null);
 
   useEffect(() => {
     getReadSet().then((s) => setReadCount(s.length));
   }, []);
+
+  const handleCheckUpdate = async () => {
+    setChecking(true);
+    setUpdateInfo(null);
+    const result = await checkForUpdate();
+    setChecking(false);
+    if (result.error) {
+      Alert.alert("检查失败", "无法连接服务器，请稍后再试。\n\n错误：" + result.error);
+      return;
+    }
+    setUpdateInfo({
+      hasUpdate: result.hasUpdate,
+      version: result.remote?.version,
+      url: result.remote?.url,
+      changelog: result.remote?.changelog,
+    });
+    if (!result.hasUpdate) {
+      Alert.alert("已是最新版本 ✨", `当前版本 v${LOCAL_VERSION}`);
+    }
+  };
+
+  const openDownload = (url: string) => {
+    WebBrowser.openBrowserAsync(url);
+  };
 
   const Row = ({
     icon,
@@ -77,7 +105,48 @@ export default function SettingsScreen() {
           <Row icon={<BookOpen size={18} color={palette.foregroundMuted} />} label="文章总数" value={`${getAllArticles().length}`} />
           <Row icon={<Info size={18} color={palette.foregroundMuted} />} label="已读文章" value={`${readCount}`} />
           <Row icon={<Github size={18} color={palette.foregroundMuted} />} label="数据来源" value="HDU Wiki" />
-          <Row icon={<Info size={18} color={palette.foregroundMuted} />} label="版本" value="1.0.0" />
+          <Row icon={<Info size={18} color={palette.foregroundMuted} />} label="版本" value={`v${LOCAL_VERSION}`} />
+        </Card>
+
+        <Card>
+          <Text style={[styles.blockTitle, { color: palette.foreground }]}>更新</Text>
+          <TouchableOpacity
+            onPress={handleCheckUpdate}
+            disabled={checking}
+            style={[styles.updateBtn, { backgroundColor: palette.primarySoft }]}
+          >
+            {checking ? (
+              <ActivityIndicator size="small" color={palette.primary} />
+            ) : (
+              <RefreshCw size={16} color={palette.primary} />
+            )}
+            <Text style={[styles.updateBtnText, { color: palette.primary }]}>
+              {checking ? "检查中…" : "检查更新"}
+            </Text>
+          </TouchableOpacity>
+
+          {updateInfo?.hasUpdate && updateInfo.url ? (
+            <View style={[styles.updateBox, { borderColor: palette.primary, backgroundColor: palette.primarySoft }]}>
+              <Text style={[styles.updateNewVer, { color: palette.primary }]}>
+                发现新版本 v{updateInfo.version} 🎉
+              </Text>
+              {updateInfo.changelog ? (
+                <Text style={[styles.updateChangelog, { color: palette.foreground }]}>
+                  {updateInfo.changelog.replace(/\\n/g, "\n")}
+                </Text>
+              ) : null}
+              <TouchableOpacity
+                onPress={() => openDownload(updateInfo.url!)}
+                style={[styles.downloadBtn, { backgroundColor: palette.primary }]}
+              >
+                <Download size={16} color="#fff" />
+                <Text style={styles.downloadBtnText}>下载新版 APK</Text>
+              </TouchableOpacity>
+              <Text style={[styles.updateHint, { color: palette.foregroundMuted }]}>
+                下载后点开安装，覆盖即可（收藏/进度会保留）
+              </Text>
+            </View>
+          ) : null}
         </Card>
       </ScrollView>
     </SafeAreaView>
@@ -112,4 +181,33 @@ const styles = StyleSheet.create({
   rowIcon: { width: 24, alignItems: "center" },
   rowLabel: { flex: 1, fontSize: fontSize.md },
   rowValue: { fontSize: fontSize.sm },
+  updateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+  },
+  updateBtnText: { fontSize: fontSize.md, fontWeight: "700" },
+  updateBox: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  updateNewVer: { fontSize: fontSize.lg, fontWeight: "800" },
+  updateChangelog: { fontSize: fontSize.sm, lineHeight: 20 },
+  downloadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  downloadBtnText: { color: "#fff", fontSize: fontSize.sm, fontWeight: "700" },
+  updateHint: { fontSize: fontSize.xs, marginTop: 2 },
 });
