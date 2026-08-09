@@ -68,6 +68,60 @@ export const getThemePref = (): Promise<"light" | "dark" | "system"> =>
 export const setThemePref = (mode: "light" | "dark" | "system"): Promise<void> =>
   writeJSON(KEYS.theme, mode);
 
+// ---- 阅读设置（字号/行距/护眼） ----
+export interface ReadingSettings {
+  fontScale: number; // 0.85(小) / 1.0(中) / 1.15(大) / 1.3(超大)
+  lineHeight: number; // 1.6 / 1.8 / 2.0
+  eyeCare: boolean; // 护眼模式（米黄背景）
+}
+const DEFAULT_SETTINGS: ReadingSettings = { fontScale: 1, lineHeight: 1.9, eyeCare: false };
+export const getReadingSettings = (): Promise<ReadingSettings> =>
+  readJSON<ReadingSettings>("dudu:reading", DEFAULT_SETTINGS);
+export const setReadingSettings = (s: ReadingSettings): Promise<void> =>
+  writeJSON("dudu:reading", s);
+
+// ---- 导出/导入备份 ----
+export interface BackupData {
+  version: 1;
+  exportedAt: string;
+  favorites: string[];
+  progress: Record<string, number>;
+  read: string[];
+  readingSettings?: ReadingSettings;
+  themePref?: string;
+}
+
+/** 把所有本地数据打包成备份对象 */
+export async function exportBackup(): Promise<BackupData> {
+  const [favorites, progress, read, readingSettings, themePref] = await Promise.all([
+    getFavorites(),
+    getProgress(),
+    getReadSet(),
+    getReadingSettings(),
+    getThemePref(),
+  ]);
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    favorites,
+    progress,
+    read,
+    readingSettings,
+    themePref,
+  };
+}
+
+/** 从备份对象恢复所有本地数据 */
+export async function importBackup(data: BackupData): Promise<void> {
+  if (!data || data.version !== 1) throw new Error("备份文件格式不正确");
+  if (Array.isArray(data.favorites)) await writeJSON(KEYS.favorites, data.favorites);
+  if (data.progress && typeof data.progress === "object")
+    await writeJSON(KEYS.progress, data.progress);
+  if (Array.isArray(data.read)) await writeJSON(KEYS.read, data.read);
+  if (data.readingSettings) await writeJSON("dudu:reading", data.readingSettings);
+  if (data.themePref) await writeJSON(KEYS.theme, data.themePref);
+}
+
 // ---- 投稿草稿（若将来启用投稿） ----
 export type Draft = Record<string, unknown> & { updatedAt: number };
 export const getDrafts = (): Promise<Draft[]> => readJSON<Draft[]>(KEYS.drafts, []);

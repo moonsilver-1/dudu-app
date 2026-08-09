@@ -2,6 +2,7 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
+import { ReadingSettingsProvider } from "./src/context/ReadingSettingsContext";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 
@@ -15,8 +16,10 @@ export default function App() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <ThemeProvider>
-          <RootNavigator />
-          <Bar />
+          <ReadingSettingsProvider>
+            <RootNavigator />
+            <Bar />
+          </ReadingSettingsProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </ErrorBoundary>

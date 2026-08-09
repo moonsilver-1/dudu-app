@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View, useWindowDimensions } from "react-native";
 import WebView from "react-native-webview";
 import { useTheme } from "../context/ThemeContext";
+import { useReadingSettings } from "../context/ReadingSettingsContext";
 import {
   KATEX_CSS,
   HIGHLIGHT_CSS,
@@ -42,29 +43,38 @@ export function ArticleDocument({
   onLinkPress,
 }: Props) {
   const { palette, isDark } = useTheme();
+  const { settings: reading } = useReadingSettings();
   const { width } = useWindowDimensions();
 
   const doc = useMemo(() => {
+    // 护眼模式：米黄色背景 + 深棕文字（不跟暗色冲突，暗色下护眼无效）
+    const eyeCareActive = reading.eyeCare && !isDark;
+    const contentBg = eyeCareActive ? "#F5EBC6" : palette.contentBg;
+    const foreground = eyeCareActive ? "#4A3A20" : palette.foreground;
     const themeVars = `
       :root{
         --background:${palette.background};
         --surface:${palette.surface};
-        --surface-muted:${palette.surfaceMuted};
-        --foreground:${palette.foreground};
-        --foreground-muted:${palette.foregroundMuted};
-        --border:${palette.border};
+        --surface-muted:${eyeCareActive ? "#EBDFB4" : palette.surfaceMuted};
+        --foreground:${foreground};
+        --foreground-muted:${eyeCareActive ? "#6B5836" : palette.foregroundMuted};
+        --border:${eyeCareActive ? "#D9C99A" : palette.border};
         --primary:${palette.primary};
         --primary-strong:${palette.primaryStrong};
-        --content-bg:${palette.contentBg};
+        --content-bg:${contentBg};
       }
-      body{background:var(--content-bg);color:var(--foreground);}
-      .wiki-content pre{background:${isDark ? "#0e1117" : palette.surfaceMuted};}
-      .wiki-content code{background:${isDark ? "rgba(255,255,255,0.06)" : palette.surfaceMuted};}
+      body{background:var(--content-bg);color:var(--foreground);font-size:${16 * reading.fontScale}px;line-height:${reading.lineHeight};}
+      .wiki-content{font-size:${16 * reading.fontScale}px;line-height:${reading.lineHeight};}
+      .wiki-content h1{font-size:${2 * reading.fontScale}rem;}
+      .wiki-content h2{font-size:${1.55 * reading.fontScale}rem;}
+      .wiki-content h3{font-size:${1.25 * reading.fontScale}rem;}
+      .wiki-content pre{background:${isDark ? "#0e1117" : eyeCareActive ? "#EBDFB4" : palette.surfaceMuted};}
+      .wiki-content code{background:${isDark ? "rgba(255,255,255,0.06)" : eyeCareActive ? "rgba(74,58,32,0.1)" : palette.surfaceMuted};}
       .wiki-content blockquote{border-left:4px solid var(--primary);background:var(--surface-muted);}
       .wiki-content code.language-math{background:none;padding:0;}
       /* 文章头部（标题/作者/标签）—— 注入到 WebView 里渲染 */
       .article-head{padding:0 0 12px;margin-bottom:8px;border-bottom:1px solid var(--border);}
-      .article-head h1{margin:0 0 8px;font-size:1.7rem;line-height:1.35;font-weight:800;color:var(--foreground);}
+      .article-head h1{margin:0 0 8px;font-size:${1.7 * reading.fontScale}rem;line-height:1.35;font-weight:800;color:var(--foreground);}
       .article-meta{display:flex;flex-wrap:wrap;gap:14px;color:var(--foreground-muted);font-size:13px;margin-top:4px;}
       .article-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
       .article-tag{font-size:12px;padding:2px 10px;border-radius:999px;background:var(--surface-muted);color:var(--foreground-muted);}

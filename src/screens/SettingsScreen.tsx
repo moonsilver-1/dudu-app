@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Sun, Moon, MoonStar, Info, Github, BookOpen, RefreshCw, Download } from "lucide-react-native";
+import { Sun, Moon, MoonStar, Info, Github, BookOpen, RefreshCw, Download, Upload, Share2, Clock4 } from "lucide-react-native";
 import * as WebBrowser from "expo-web-browser";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
+import * as DocumentPicker from "expo-document-picker";
 import { useTheme } from "../context/ThemeContext";
 import { radius, spacing, fontSize, fontFamily } from "../theme";
 import { getAllArticles } from "../lib/content";
-import { getReadSet } from "../lib/storage";
+import { getReadSet, exportBackup, importBackup, type BackupData } from "../lib/storage";
 import { Card, ScreenHeader, Pill } from "../components/ui";
 import { checkForUpdate, LOCAL_VERSION } from "../lib/update";
 
@@ -42,6 +45,66 @@ export default function SettingsScreen() {
 
   const openDownload = (url: string) => {
     WebBrowser.openBrowserAsync(url);
+  };
+
+  /** 导出备份：收藏+进度+设置 → json 文件，调用系统分享 */
+  const handleExport = async () => {
+    try {
+      const data = await exportBackup();
+      const fileName = `dudu-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(data, null, 2), {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "application/json",
+          dialogTitle: "导出嘟嘟备份",
+          UTI: "public.json",
+        });
+      } else {
+        Alert.alert("已导出", "备份文件已生成：" + fileUri);
+      }
+    } catch (e: any) {
+      Alert.alert("导出失败", String(e?.message || e));
+    }
+  };
+
+  /** 导入备份：从文件选择器选 json，恢复收藏+进度+设置 */
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/json",
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      const file = result.assets[0];
+      const content = await FileSystem.readAsStringAsync(file.uri, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+      const data = JSON.parse(content) as BackupData;
+      Alert.alert(
+        "确认导入",
+        `备份时间：${data.exportedAt?.slice(0, 10) || "未知"}\n收藏 ${data.favorites?.length ?? 0} 篇，进度 ${Object.keys(data.progress ?? {}).length} 篇。\n\n注意：会覆盖当前的收藏和进度。`,
+        [
+          { text: "取消", style: "cancel" },
+          {
+            text: "导入",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await importBackup(data);
+                Alert.alert("导入成功 ✅", "请重新打开 App 让设置生效");
+              } catch (err: any) {
+                Alert.alert("导入失败", String(err?.message || err));
+              }
+            },
+          },
+        ]
+      );
+    } catch (e: any) {
+      Alert.alert("导入失败", String(e?.message || e));
+    }
   };
 
   const Row = ({
@@ -94,7 +157,19 @@ export default function SettingsScreen() {
               <MoonStar size={18} color={palette.foreground} />
               <Text style={[styles.themeText, { color: palette.foreground }]}>跟随系统</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPref("auto")}
+              style={[styles.themeBtn, { backgroundColor: pref === "auto" ? palette.primarySoft : palette.surfaceMuted }]}
+            >
+              <Clock4 size={18} color={palette.foreground} />
+              <Text style={[styles.themeText, { color: palette.foreground }]}>自动</Text>
+            </TouchableOpacity>
           </View>
+          {pref === "auto" ? (
+            <Text style={[styles.autoHint, { color: palette.foregroundMuted }]}>
+              晚上 8 点到早上 7 点自动切换深色 🌙
+            </Text>
+          ) : null}
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: spacing.sm }}>
             <Pill label={mode === "dark" ? "当前：深色" : "当前：浅色"} />
           </View>
@@ -148,6 +223,29 @@ export default function SettingsScreen() {
             </View>
           ) : null}
         </Card>
+
+        <Card>
+          <Text style={[styles.blockTitle, { color: palette.foreground }]}>备份与迁移</Text>
+          <Text style={[styles.backupHint, { color: palette.foregroundMuted }]}>
+            导出收藏、阅读进度和设置到文件；换手机或重装时可导入恢复。
+          </Text>
+          <View style={styles.backupRow}>
+            <TouchableOpacity
+              onPress={handleExport}
+              style={[styles.backupBtn, { backgroundColor: palette.primarySoft }]}
+            >
+              <Upload size={16} color={palette.primary} />
+              <Text style={[styles.backupBtnText, { color: palette.primary }]}>导出备份</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleImport}
+              style={[styles.backupBtn, { backgroundColor: palette.surfaceMuted }]}
+            >
+              <Download size={16} color={palette.foreground} />
+              <Text style={[styles.backupBtnText, { color: palette.foreground }]}>导入备份</Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
       </ScrollView>
     </SafeAreaView>
   );
@@ -171,6 +269,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   themeText: { fontSize: fontSize.sm, fontWeight: "600" },
+  autoHint: { fontSize: fontSize.xs, marginTop: spacing.sm },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -210,4 +309,16 @@ const styles = StyleSheet.create({
   },
   downloadBtnText: { color: "#fff", fontSize: fontSize.sm, fontWeight: "700" },
   updateHint: { fontSize: fontSize.xs, marginTop: 2 },
+  backupHint: { fontSize: fontSize.sm, lineHeight: 20, marginBottom: spacing.md },
+  backupRow: { flexDirection: "row", gap: spacing.sm },
+  backupBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+  },
+  backupBtnText: { fontSize: fontSize.sm, fontWeight: "700" },
 });

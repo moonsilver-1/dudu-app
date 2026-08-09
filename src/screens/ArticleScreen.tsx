@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Sun,
   Moon,
+  Type,
   type LucideIcon,
 } from "lucide-react-native";
 import * as Clipboard from "expo-clipboard";
@@ -27,6 +28,8 @@ import {
 } from "../lib/content";
 import { isFavorite, toggleFavorite, setProgress, getProgress } from "../lib/storage";
 import { ArticleDocument } from "../components/ArticleDocument";
+import { ReadingSettingsPanel } from "../components/ReadingSettingsPanel";
+import { ShareCard } from "../components/ShareCard";
 import { Pill, EmptyState } from "../components/ui";
 
 export function ArticleScreen() {
@@ -42,6 +45,8 @@ export function ArticleScreen() {
   const [isFav, setIsFav] = useState(false);
   const [progressRatio, setProgressRatio] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [readingPanelOpen, setReadingPanelOpen] = useState(false);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
   const [activeToc, setActiveToc] = useState<string | null>(null);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,10 +84,22 @@ export function ArticleScreen() {
     setIsFav(next);
   };
 
-  const handleShare = async () => {
-    const link = "https://hdu-wiki.cn/article/" + slug;
-    await Clipboard.setStringAsync(link);
-    Alert.alert("已复制链接", "文章链接已复制到剪贴板");
+  const handleShare = () => {
+    Alert.alert("分享文章", "选择分享方式", [
+      {
+        text: "生成分享图片 📸",
+        onPress: () => setShareCardOpen(true),
+      },
+      {
+        text: "复制链接 🔗",
+        onPress: async () => {
+          const link = "https://hdu-wiki.cn/article/" + slug;
+          await Clipboard.setStringAsync(link);
+          Alert.alert("已复制", "文章链接已复制到剪贴板");
+        },
+      },
+      { text: "取消", style: "cancel" },
+    ]);
   };
 
   const handleLinkPress = (url: string) => {
@@ -135,6 +152,7 @@ export function ArticleScreen() {
         <View style={styles.topActions}>
           {iconBtn(isFav ? BookmarkCheck : Bookmark, isFav ? palette.primary : palette.foregroundMuted, handleFavorite)}
           {iconBtn(List, palette.foregroundMuted, () => setDrawerOpen(true))}
+          {iconBtn(Type, palette.foregroundMuted, () => setReadingPanelOpen(true))}
           {iconBtn(Share2, palette.foregroundMuted, handleShare)}
           {iconBtn(mode === "dark" ? Sun : Moon, palette.foregroundMuted, toggle)}
         </View>
@@ -196,6 +214,16 @@ export function ArticleScreen() {
           </View>
         </View>
       ) : null}
+
+      {/* 阅读设置面板（字号/行距/护眼） */}
+      <ReadingSettingsPanel visible={readingPanelOpen} onClose={() => setReadingPanelOpen(false)} />
+
+      {/* 分享卡片（生成图片+二维码） */}
+      <ShareCard
+        visible={shareCardOpen}
+        article={article}
+        onClose={() => setShareCardOpen(false)}
+      />
     </SafeAreaView>
   );
 }
