@@ -1,11 +1,11 @@
 import { ExpoConfig } from "expo/config";
 
 const config: ExpoConfig = {
-  name: "嘟嘟 DUDU",
+  name: "dudu百科",
   slug: "dudu",
   owner: "moonsilver-1s-team",
   scheme: "dudu",
-  version: "1.0.0",
+  version: "1.0.3",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   newArchEnabled: false,

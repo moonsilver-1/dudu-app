@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = '嘟嘟 DUDU'
+rootProject.name = 'dudu百科'
 
 dependencyResolutionManagement {
   versionCatalogs {
