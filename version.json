@@ -1,6 +1,7 @@
 {
   "version": "1.0.2",
   "versionCode": 3,
-  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.2/dudu-release.apk",
-  "changelog": "v1.0.2 五大功能更新\n- 备份导入导出：收藏+进度+设置可迁移\n- 搜索高亮：关键词红色标注\n- 阅读设置：字号/行距/护眼模式\n- 夜间自动切换：晚8点-早7点自动深色\n- 分享卡片：生成文章分享图+二维码"
+  "url": "https://cdn.jsdelivr.net/gh/moonsilver-1/dudu-app@master/downloads/dudu-release.apk",
+  "changelog": "v1.0.2 五大功能更新\n- 备份导入导出：收藏+进度+设置可迁移\n- 搜索高亮：关键词红色标注\n- 阅读设置：字号/行距/护眼模式\n- 夜间自动切换：晚8点-早7点自动深色\n- 分享卡片：生成文章分享图+二维码",
+  "mirror": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.2/dudu-release.apk"
 }
