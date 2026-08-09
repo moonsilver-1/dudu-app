@@ -91,8 +91,8 @@ android {
         applicationId 'com.hduwiki.dudu'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.1"
+        versionCode 3
+        versionName "1.0.2"
     }
     signingConfigs {
         debug {
@@ -102,22 +102,22 @@ android {
             keyPassword 'android'
         }
         release {
-            if (project.hasProperty('DUDU_UPLOAD_STORE_FILE')) {
-                storeFile file(DUDU_UPLOAD_STORE_FILE)
-                storePassword DUDU_UPLOAD_STORE_PASSWORD
-                keyAlias DUDU_UPLOAD_KEY_ALIAS
-                keyPassword DUDU_UPLOAD_KEY_PASSWORD
-            }
-        }
+      if (project.hasProperty('DUDU_UPLOAD_STORE_FILE')) {
+        storeFile file(DUDU_UPLOAD_STORE_FILE)
+        storePassword DUDU_UPLOAD_STORE_PASSWORD
+        keyAlias DUDU_UPLOAD_KEY_ALIAS
+        keyPassword DUDU_UPLOAD_KEY_PASSWORD
+      }
     }
+  }
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

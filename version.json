@@ -1,6 +1,6 @@
 {
-  "version": "1.0.1",
-  "versionCode": 2,
-  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.1/dudu-release.apk",
-  "changelog": "v1.0.1 更新\n- 新增：App 内\"检查更新\"功能（我的 → 更新）\n- 修复：文章正文不显示\n- 修复：课程分类分卷（深度学习/算法）\n- 改进：柔和主题色、首页去紫框、分类可折叠"
+  "version": "1.0.2",
+  "versionCode": 3,
+  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.2/dudu-release.apk",
+  "changelog": "v1.0.2 五大功能更新\n- 备份导入导出：收藏+进度+设置可迁移\n- 搜索高亮：关键词红色标注\n- 阅读设置：字号/行距/护眼模式\n- 夜间自动切换：晚8点-早7点自动深色\n- 分享卡片：生成文章分享图+二维码"
 }

@@ -127,6 +127,31 @@ const articles = [];
 const categories = {};
 const featured = [];
 
+/** 复刻网站 coursePlacement：返回某 slug 在其课程里的全局阅读顺序（globalIndex）。
+ * 不在该课程卷结构里则返回 null。课程文章按此排序，非课程文章按日期。 */
+const placementCache = new Map(); // "section/slug" -> globalIndex | null
+function getPlacement(section, slug) {
+  const key = section + "/" + slug;
+  if (placementCache.has(key)) return placementCache.get(key);
+  const vols = courseVolumes?.[section];
+  if (!vols) {
+    placementCache.set(key, null);
+    return null;
+  }
+  let idx = 0;
+  for (const vol of vols) {
+    for (const s of vol.slugs) {
+      if (s === slug) {
+        placementCache.set(key, idx);
+        return idx;
+      }
+      idx++;
+    }
+  }
+  placementCache.set(key, null);
+  return null;
+}
+
 for (const file of files) {
   const rel = path.relative(CONTENT_DIR, file);
   const parts = rel.split(path.sep);
@@ -169,7 +194,12 @@ for (const file of files) {
   };
   articles.push({ ...meta, html, toc });
 
-  if (meta.featured) featured.push(meta);
+  // featured 文章 = 必读文章，单独归入 featured 分组，不重复进各分类
+  // （与网站 getArticlesByCategory 过滤 featured 的逻辑一致）
+  if (meta.featured) {
+    featured.push(meta);
+    continue;
+  }
 
   if (!categories[category]) {
     categories[category] = {
@@ -219,7 +249,18 @@ for (const cat of Object.values(categories)) {
     };
     sec.name = knowns[sec.slug] ?? sec.slug;
   }
-  cat.articles.sort((a, b) => (a.date < b.date ? 1 : -1));
+  // 排序：课程文章（section 在 courseVolumes 里）按卷顺序 globalIndex 排，
+  // 非课程文章按日期倒序。复刻网站 sortArticles 逻辑。
+  const sortArticle = (a, b) => {
+    const pa = getPlacement(a.section, a.slug);
+    const pb = getPlacement(b.section, b.slug);
+    if (pa != null && pb != null) return pa - pb;
+    if (pa != null) return -1;
+    if (pb != null) return 1;
+    return (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+  };
+  cat.articles.sort(sortArticle);
+  for (const sec of cat.sections) sec.articles.sort(sortArticle);
 }
 
 function categoryDesc(c) {

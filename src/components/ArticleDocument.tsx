@@ -52,6 +52,7 @@ export function ArticleDocument({
     const contentBg = eyeCareActive ? "#F5EBC6" : palette.contentBg;
     const foreground = eyeCareActive ? "#4A3A20" : palette.foreground;
     const themeVars = `
+      html{font-size:${16 * reading.fontScale}px;}
       :root{
         --background:${palette.background};
         --surface:${palette.surface};
@@ -65,9 +66,6 @@ export function ArticleDocument({
       }
       body{background:var(--content-bg);color:var(--foreground);font-size:${16 * reading.fontScale}px;line-height:${reading.lineHeight};}
       .wiki-content{font-size:${16 * reading.fontScale}px;line-height:${reading.lineHeight};}
-      .wiki-content h1{font-size:${2 * reading.fontScale}rem;}
-      .wiki-content h2{font-size:${1.55 * reading.fontScale}rem;}
-      .wiki-content h3{font-size:${1.25 * reading.fontScale}rem;}
       .wiki-content pre{background:${isDark ? "#0e1117" : eyeCareActive ? "#EBDFB4" : palette.surfaceMuted};}
       .wiki-content code{background:${isDark ? "rgba(255,255,255,0.06)" : eyeCareActive ? "rgba(74,58,32,0.1)" : palette.surfaceMuted};}
       .wiki-content blockquote{border-left:4px solid var(--primary);background:var(--surface-muted);}
