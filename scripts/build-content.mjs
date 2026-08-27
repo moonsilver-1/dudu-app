@@ -52,7 +52,8 @@ const remarkParse = pick(await importFromWeb("remark-parse/index.js"));
 const remarkGfm = pick(await importFromWeb("remark-gfm/index.js"));
 const remarkMath = pick(await importFromWeb("remark-math/index.js"));
 const remarkRehype = pick(await importFromWeb("remark-rehype/index.js"));
-const rehypeRaw = pick(await importFromWeb("rehype-raw/index.js"));
+const rehypeSlug = pick(await importFromWeb("rehype-slug/index.js"));
+const rehypeKatex = pick(await importFromWeb("rehype-katex/index.js"));
 const rehypeHighlight = pick(await importFromWeb("rehype-highlight/index.js"));
 const rehypeStringify = pick(await importFromWeb("rehype-stringify/index.js"));
 
@@ -64,15 +65,19 @@ function pick(mod) {
   return fn ?? mod;
 }
 
-// 公式不在构建期渲染，改为在 App 的 WebView 内用 KaTeX 运行时渲染（见 generatedStyles）
+// 与网站 lib/content.ts 的 markdownProcessor 完全一致（公式构建期渲染）。
+// 此前的方案有两个致命缺陷：① KaTeX 靠 WebView 运行时渲染，但 highlight 会把
+// math 包进 <code class="language-math">，auto-render 忽略 code 标签，公式永不渲染；
+// ② 多了 allowDangerousHtml/rehype-raw，依赖在前端已不存在。
 const processor = unified()
   .use(remarkParse)
   .use(remarkGfm)
-  .use(remarkMath)
-  .use(remarkRehype, { allowDangerousHtml: true })
-  .use(rehypeRaw)
+  .use(remarkMath, { singleDollarTextMath: true })
+  .use(remarkRehype)
+  .use(rehypeSlug)
   .use(rehypeHighlight, { detect: true, ignoreMissing: true })
-  .use(rehypeStringify, { allowDangerousHtml: true });
+  .use(rehypeKatex, { throwOnError: false, strict: false })
+  .use(rehypeStringify);
 
 // ---------- 工具 ----------
 function slugifyBasename(file, category, section) {

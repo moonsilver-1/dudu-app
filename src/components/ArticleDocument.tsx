@@ -7,13 +7,12 @@ import {
   KATEX_CSS,
   HIGHLIGHT_CSS,
   WIKI_CSS,
-  KATEX_JS,
-  KATEX_AUTO_RENDER_JS,
 } from "../lib/generatedStyles";
 
 /**
  * 文章正文渲染器：用 WebView 加载离线 HTML。
  * 样式 = KaTeX(字体已 base64 内联) + highlight 主题 + wiki-content CSS，
+ * 公式在构建期由 rehype-katex 渲染为最终 HTML，运行时无需任何 JS。
  * 完全离线、与网站视觉效果一致。主题色随明暗模式切换。
  * 标题/作者/标签/正文 全部在一个 WebView 内渲染+滚动，
  * 这样能正确撑满高度（避免被外层 ScrollView 套住导致高度塌为 0）。
@@ -69,7 +68,6 @@ export function ArticleDocument({
       .wiki-content pre{background:${isDark ? "#0e1117" : eyeCareActive ? "#EBDFB4" : palette.surfaceMuted};}
       .wiki-content code{background:${isDark ? "rgba(255,255,255,0.06)" : eyeCareActive ? "rgba(74,58,32,0.1)" : palette.surfaceMuted};}
       .wiki-content blockquote{border-left:4px solid var(--primary);background:var(--surface-muted);}
-      .wiki-content code.language-math{background:none;padding:0;}
       /* 文章头部（标题/作者/标签）—— 注入到 WebView 里渲染 */
       .article-head{padding:0 0 12px;margin-bottom:8px;border-bottom:1px solid var(--border);}
       .article-head h1{margin:0 0 8px;font-size:${1.7 * reading.fontScale}rem;line-height:1.35;font-weight:800;color:var(--foreground);}
@@ -93,30 +91,10 @@ export function ArticleDocument({
       </div>
     `;
     const body = `${head}<article class="wiki-content">${html}</article>`;
-    const renderScript = `
-      (function(){
-        function renderMath(){
-          if(window.renderMathInElement){
-            renderMathInElement(document.body, {
-              delimiters: [
-                {left:'$$',right:'$$',display:true},
-                {left:'$',right:'$',display:false},
-                {left:'\\\\(',right:'\\\\)',display:false},
-                {left:'\\\\[',right:'\\\\]',display:true}
-              ],
-              ignoredTags:['script','noscript','style','textarea','pre','code'],
-              throwOnError:false
-            });
-          }
-        }
-        if(document.readyState!=='loading') renderMath();
-        else document.addEventListener('DOMContentLoaded', renderMath);
-      })();
-    `;
+    // 公式已在构建期由 rehype-katex 渲染为最终 HTML（与网站一致），
+    // 这里不再做运行时渲染 —— 运行时方案会被 code 标签忽略导致公式不显示。
     return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <style>${KATEX_CSS}${HIGHLIGHT_CSS}${WIKI_CSS}${themeVars}</style>
-<script>${KATEX_JS}</script>
-<script>${KATEX_AUTO_RENDER_JS}</script>
 </head>
 <body>${body}
 <script>
@@ -127,7 +105,6 @@ export function ArticleDocument({
     var a = e.target.closest('a');
     if(a && a.href){ e.preventDefault(); window.ReactNativeWebView.postMessage('link:'+a.href); }
   });
-  ${renderScript}
 })();
 </script></body></html>`;
   }, [html, title, author, readingTime, tags, palette, isDark]);

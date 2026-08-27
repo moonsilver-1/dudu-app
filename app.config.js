@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   slug: "dudu",
   owner: "moonsilver-1s-team",
   scheme: "dudu",
-  version: "1.0.3",
+  version: "1.0.4",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   newArchEnabled: false,

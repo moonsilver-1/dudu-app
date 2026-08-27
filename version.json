@@ -1,6 +1,6 @@
 {
-  "version": "1.0.3",
-  "versionCode": 4,
-  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.3/dudu-release.apk",
-  "changelog": "v1.0.3 更新\n- 应用名改为「dudu百科」\n- 5 大功能：备份导入导出/搜索高亮/阅读设置/夜间自动/分享卡片\n- APK 瘦身到 41MB\n- 文章内容 149 篇"
+  "version": "1.0.4",
+  "versionCode": 5,
+  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.4/dudu-release.apk",
+  "changelog": "v1.0.4 更新\n- 修复数学公式不显示的问题（算法/深度学习课程大量公式现已正常渲染）\n- 同步最新文章（156 篇，新增无人机算法学习投稿）\n- 阅读页性能优化"
 }
