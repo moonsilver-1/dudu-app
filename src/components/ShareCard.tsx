@@ -23,7 +23,7 @@ export function ShareCard({
   onClose: () => void;
 }) {
   const { palette } = useTheme();
-  const shotRef = useRef<ViewShot>(null);
+  const shotRef = useRef<any>(null);
 
   if (!article) return null;
   const link = "https://hdu-wiki.cn/article/" + article.slug;

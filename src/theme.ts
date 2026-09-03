@@ -37,6 +37,11 @@ export interface Palette {
   skeleton: string;
   // WebView 内容区背景
   contentBg: string;
+  // 内容流与品牌层
+  divider: string;
+  heroStart: string;
+  heroEnd: string;
+  onHero: string;
 }
 
 export const lightPalette: Palette = {
@@ -61,6 +66,10 @@ export const lightPalette: Palette = {
   overlay: "rgba(11,18,32,0.45)",
   skeleton: "#E6E9F0",
   contentBg: "#FFFFFF",
+  divider: "#EEEDE8",
+  heroStart: "#10264D",
+  heroEnd: "#2563EB",
+  onHero: "#FFFFFF",
 };
 
 export const darkPalette: Palette = {
@@ -85,6 +94,10 @@ export const darkPalette: Palette = {
   overlay: "rgba(0,0,0,0.55)",
   skeleton: "#1B2740",
   contentBg: "#0E1626",
+  divider: "#243149",
+  heroStart: "#0B1220",
+  heroEnd: "#312E81",
+  onHero: "#FFFFFF",
 };
 
 export const paletteFor = (mode: ThemeMode): Palette =>

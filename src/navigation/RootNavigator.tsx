@@ -33,15 +33,15 @@ function Tabs() {
         headerShown: false,
         tabBarActiveTintColor: palette.primary,
         tabBarInactiveTintColor: palette.foregroundSubtle,
-        tabBarStyle: {
-          backgroundColor: palette.surface,
-          borderTopColor: palette.border,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 6,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
-        tabBarItemStyle: { borderRadius: radius.md },
+          tabBarStyle: {
+            backgroundColor: palette.surface,
+            borderTopColor: palette.divider,
+            height: 70,
+            paddingBottom: 10,
+            paddingTop: 8,
+          },
+          tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+          tabBarItemStyle: { borderRadius: radius.md, marginHorizontal: 3, marginVertical: 4 },
       }}
     >
       <Tab.Screen

@@ -66,7 +66,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setPref = (p: Pref) => {
     setPrefState(p);
-    setThemePref(p);
+    if (p !== "auto") setThemePref(p);
   };
   const toggle = () => setPref(mode === "dark" ? "light" : "dark");
 

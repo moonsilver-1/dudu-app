@@ -1,6 +1,6 @@
 {
-  "version": "1.0.4",
-  "versionCode": 5,
-  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.4/dudu-release.apk",
-  "changelog": "v1.0.4 更新\n- 修复数学公式不显示的问题（算法/深度学习课程大量公式现已正常渲染）\n- 同步最新文章（156 篇，新增无人机算法学习投稿）\n- 阅读页性能优化"
+  "version": "1.0.5",
+  "versionCode": 6,
+  "url": "https://github.com/moonsilver-1/dudu-app/releases/download/v1.0.5/dudu-release.apk",
+  "changelog": "v1.0.5 更新\n- 全新移动端视觉界面，优化首页内容发现体验\n- 新增品牌启动动画与更流畅的页面过渡\n- 优化文章卡片、搜索框和底部导航\n- 修复部分主题与构建配置问题"
 }

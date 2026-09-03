@@ -1,11 +1,9 @@
-import { ExpoConfig } from "expo/config";
-
-const config: ExpoConfig = {
+const config = {
   name: "dudu百科",
   slug: "dudu",
   owner: "moonsilver-1s-team",
   scheme: "dudu",
-  version: "1.0.4",
+  version: "1.0.5",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   newArchEnabled: false,

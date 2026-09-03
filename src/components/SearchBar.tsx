@@ -46,9 +46,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
     borderRadius: radius.full,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    height: 44,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: spacing.lg,
+    height: 50,
   },
-  input: { flex: 1, fontSize: fontSize.md },
+  input: { flex: 1, fontSize: fontSize.md, paddingVertical: 0 },
 });
