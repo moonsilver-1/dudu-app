@@ -4,7 +4,6 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, Alert } from "react-na
 import ViewShot from "react-native-view-shot";
 import QRCode from "react-native-qrcode-svg";
 import * as Sharing from "expo-sharing";
-import * as FileSystem from "expo-file-system";
 import { X, Share2 as ShareIcon } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
 import { radius, spacing, fontSize } from "../theme";
@@ -54,25 +53,25 @@ export function ShareCard({
           <ViewShot
             ref={shotRef}
             options={{ format: "png", quality: 1 }}
-            style={[styles.card, { backgroundColor: "#FFFFFF" }]}
+            style={[styles.card, { backgroundColor: palette.surface }]}
           >
             <View style={styles.cardInner}>
-              <Text style={styles.cardBrand}>🐑 嘟嘟 DUDU</Text>
-              <Text style={styles.cardTitle} numberOfLines={3}>
+              <Text style={[styles.cardBrand, { color: palette.primary }]}>🐑 嘟嘟 · 杭电 Wiki</Text>
+              <Text style={[styles.cardTitle, { color: palette.foreground }]} numberOfLines={3}>
                 {article.title}
               </Text>
               {article.excerpt ? (
-                <Text style={styles.cardExcerpt} numberOfLines={4}>
+                <Text style={[styles.cardExcerpt, { color: palette.foregroundMuted }]} numberOfLines={4}>
                   {article.excerpt}
                 </Text>
               ) : null}
               {article.author ? (
-                <Text style={styles.cardAuthor}>✍ {article.author}</Text>
+                <Text style={[styles.cardAuthor, { color: palette.foregroundSubtle }]}>{article.author}</Text>
               ) : null}
-              <View style={styles.cardFoot}>
+              <View style={[styles.cardFoot, { borderTopColor: palette.border }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardFootTitle}>扫码阅读全文</Text>
-                  <Text style={styles.cardFootSub}>hdu-wiki.cn</Text>
+                  <Text style={[styles.cardFootTitle, { color: palette.foreground }]}>扫码阅读全文</Text>
+                  <Text style={[styles.cardFootSub, { color: palette.foregroundSubtle }]}>hdu-wiki.cn</Text>
                 </View>
                 <View style={styles.qrWrap}>
                   <QRCode value={link} size={76} backgroundColor="#FFFFFF" color="#0B1220" />
@@ -84,13 +83,14 @@ export function ShareCard({
           {/* 操作按钮（不进入截图） */}
           <View style={styles.actions}>
             <TouchableOpacity
+              accessibilityRole="button"
               onPress={handleShare}
               style={[styles.shareBtn, { backgroundColor: palette.primary }]}
             >
-              <ShareIcon size={18} color="#fff" />
-              <Text style={styles.shareBtnText}>分享图片</Text>
+              <ShareIcon size={18} color={palette.onPrimary} />
+              <Text style={[styles.shareBtnText, { color: palette.onPrimary }]}>分享图片</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="关闭分享" onPress={onClose} style={[styles.closeBtn, { backgroundColor: palette.surface }]}>
               <X size={20} color={palette.foreground} />
             </TouchableOpacity>
           </View>
@@ -120,29 +120,24 @@ const styles = StyleSheet.create({
   cardInner: {
     padding: spacing.xl,
     gap: spacing.sm,
-    backgroundColor: "#FFFFFF",
   },
   cardBrand: {
     fontSize: fontSize.sm,
     fontWeight: "800",
-    color: "#2563EB",
     marginBottom: spacing.xs,
   },
   cardTitle: {
     fontSize: fontSize.xxl,
     fontWeight: "800",
-    color: "#1A1A1A",
     lineHeight: 30,
   },
   cardExcerpt: {
     fontSize: fontSize.sm,
-    color: "#555555",
     lineHeight: 21,
     marginTop: spacing.xs,
   },
   cardAuthor: {
     fontSize: fontSize.xs,
-    color: "#8C8C8C",
     marginTop: spacing.sm,
   },
   cardFoot: {
@@ -151,17 +146,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#E8E6E0",
     gap: spacing.md,
   },
   cardFootTitle: {
     fontSize: fontSize.sm,
     fontWeight: "700",
-    color: "#1A1A1A",
   },
   cardFootSub: {
     fontSize: fontSize.xs,
-    color: "#8C8C8C",
     marginTop: 2,
   },
   qrWrap: {
@@ -183,10 +175,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.full,
   },
-  shareBtnText: { color: "#fff", fontSize: fontSize.md, fontWeight: "700" },
+  shareBtnText: { fontSize: fontSize.md, fontWeight: "700" },
   closeBtn: {
     padding: spacing.md,
     borderRadius: radius.full,
-    backgroundColor: "rgba(255,255,255,0.2)",
   },
 });

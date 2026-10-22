@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet, Animated, Easing } from "react-native";
+import { View, Text, Image, StyleSheet, Animated, Easing } from "react-native";
 import { useTheme } from "../context/ThemeContext";
-import { spacing, fontSize, radius } from "../theme";
+import { spacing, fontSize } from "../theme";
 
 export function AppSplash({ onDone }: { onDone: () => void }) {
   const { palette } = useTheme();
@@ -23,25 +23,19 @@ export function AppSplash({ onDone }: { onDone: () => void }) {
   }, [markOpacity, markScale, opacity, textOpacity, onDone]);
 
   return <Animated.View style={[StyleSheet.absoluteFill, { opacity, zIndex: 20 }]}> 
-    <View style={[styles.root, { backgroundColor: palette.heroStart }]}>
-      <View style={[styles.glow, { backgroundColor: palette.heroEnd }]} />
-      <Animated.View style={[styles.mark, { opacity: markOpacity, transform: [{ scale: markScale }] }]}><Text style={styles.markText}>🐑</Text></Animated.View>
+    <View style={[styles.root, { backgroundColor: palette.background }]}>
+      <Animated.View style={{ opacity: markOpacity, transform: [{ scale: markScale }] }}><Image source={require('../../assets/wiki-sheep.png')} style={styles.sheep} resizeMode="contain" accessible={false} /></Animated.View>
       <Animated.View style={{ opacity: textOpacity, alignItems: "center" }}>
-        <Text style={styles.title}>嘟嘟 DUDU</Text>
-        <Text style={styles.subtitle}>HDU 知识库 · 离线阅读</Text>
+        <Text style={[styles.title, { color: palette.foreground }]}>嘟嘟</Text>
+        <Text style={[styles.subtitle, { color: palette.foregroundMuted }]}>杭电 Wiki</Text>
       </Animated.View>
-      <View style={styles.dots}><View style={[styles.dot, { backgroundColor: palette.primaryStrong }]} /><View style={[styles.dot, { backgroundColor: "rgba(255,255,255,.45)" }]} /><View style={[styles.dot, { backgroundColor: "rgba(255,255,255,.25)" }]} /></View>
     </View>
   </Animated.View>;
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.lg, overflow: "hidden" },
-  glow: { position: "absolute", width: 420, height: 420, borderRadius: 210, opacity: 0.45, top: -160, right: -120 },
-  mark: { width: 92, height: 92, borderRadius: radius.xl, backgroundColor: "rgba(255,255,255,.14)", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,.28)" },
-  markText: { fontSize: 48 },
-  title: { color: "#fff", fontSize: 28, fontWeight: "800", letterSpacing: 0.4 },
-  subtitle: { color: "rgba(255,255,255,.72)", fontSize: fontSize.sm, marginTop: spacing.xs },
-  dots: { position: "absolute", bottom: 64, flexDirection: "row", gap: spacing.xs },
-  dot: { width: 6, height: 6, borderRadius: 3 },
+  sheep: { width: 124, height: 124, borderRadius: 62 },
+  title: { fontSize: 28, fontWeight: "800", letterSpacing: 1 },
+  subtitle: { fontSize: fontSize.sm, marginTop: spacing.xs },
 });
