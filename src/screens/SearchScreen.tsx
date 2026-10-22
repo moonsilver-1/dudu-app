@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useContent } from "../context/ContentContext";
+import React, { useState, useEffect, useMemo, useDeferredValue } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Clock } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
-import { spacing, fontSize, radius } from "../theme";
-import { search, getArticle, type SearchHit, type Article } from "../lib/content";
+import { spacing, fontSize, radius, categoryMeta } from "../theme";
+import { search, getArticle, getArticleCount, type SearchHit, type Article } from "../lib/content";
 import { getProgress } from "../lib/storage";
 import { ScreenHeader, Pill, EmptyState } from "../components/ui";
 import { ArticleCard } from "../components/ArticleCard";
@@ -16,14 +17,16 @@ import type { ArticleMeta } from "../lib/content";
 const HOT_TAGS = ["选课", "食堂", "深度学习", "算法", "社团", "VSCode", "考研"];
 
 export default function SearchScreen() {
+  const { version: contentVersion } = useContent();
   const { palette } = useTheme();
   const navigation = useNavigation<any>();
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<{ article: Article; progress: number }[]>([]);
 
+  const deferredQuery = useDeferredValue(query);
   const results: SearchHit[] = useMemo(
-    () => (query.trim() ? search(query) : []),
-    [query]
+    () => (deferredQuery.trim() ? search(deferredQuery) : []),
+    [deferredQuery, contentVersion]
   );
 
   useEffect(() => {
@@ -50,7 +53,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.background }}>
-      <ScreenHeader title="搜索" subtitle="在 131 篇文章中查找" />
+      <ScreenHeader title="搜索" subtitle={`在 ${getArticleCount()} 篇文章中查找`} />
       <View style={styles.searchWrap}>
         <SearchBar value={query} onChange={setQuery} />
       </View>
@@ -66,6 +69,8 @@ export default function SearchScreen() {
               {results.map((hit) => (
                 <TouchableOpacity
                   key={hit.article.slug}
+                  accessibilityRole="button"
+                  accessibilityLabel={hit.article.title}
                   activeOpacity={0.85}
                   onPress={() => openArticle(hit.article.slug)}
                   style={[styles.hitCard, { backgroundColor: palette.surface, borderColor: palette.border }]}
@@ -83,7 +88,7 @@ export default function SearchScreen() {
                   ) : null}
                   <View style={styles.hitMeta}>
                     <Text style={[styles.hitCat, { color: palette.primary }]}>
-                      {hit.article.category}
+                      {categoryMeta[hit.article.category]?.name ?? hit.article.category}
                     </Text>
                     {hit.article.author ? (
                       <Text style={[styles.hitAuthor, { color: palette.foregroundSubtle }]}>

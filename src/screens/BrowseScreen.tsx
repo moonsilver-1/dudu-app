@@ -1,3 +1,4 @@
+import { useContent } from "../context/ContentContext";
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +24,7 @@ const accentFor: Record<string, string> = {
 };
 
 export default function BrowseScreen() {
+  const { version: contentVersion } = useContent();
   const { palette } = useTheme();
   const navigation: any = useNavigation();
   const route: any = useRoute();
@@ -92,7 +94,7 @@ export default function BrowseScreen() {
         title={category.name}
         subtitle={category.desc}
         right={
-          <TouchableOpacity onPress={() => navigation.navigate("Browse")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Browse", { category: undefined })}>
             <Text style={{ color: palette.primary, fontWeight: "600" }}>全部</Text>
           </TouchableOpacity>
         }

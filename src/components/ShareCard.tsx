@@ -1,3 +1,4 @@
+import { articleUrl } from "../lib/content";
 import React, { useRef } from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
 import ViewShot from "react-native-view-shot";
@@ -26,7 +27,7 @@ export function ShareCard({
   const shotRef = useRef<any>(null);
 
   if (!article) return null;
-  const link = "https://hdu-wiki.cn/article/" + article.slug;
+  const link = articleUrl(article);
 
   const handleShare = async () => {
     try {

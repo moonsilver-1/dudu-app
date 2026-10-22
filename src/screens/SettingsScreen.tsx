@@ -1,3 +1,4 @@
+import { useContent } from "../context/ContentContext";
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +15,7 @@ import { Card, ScreenHeader, Pill } from "../components/ui";
 import { checkForUpdate, LOCAL_VERSION } from "../lib/update";
 
 export default function SettingsScreen() {
+  const content = useContent();
   const { palette, mode, setPref, pref } = useTheme();
   const [readCount, setReadCount] = useState(0);
   const [checking, setChecking] = useState(false);
@@ -184,7 +186,14 @@ export default function SettingsScreen() {
         </Card>
 
         <Card>
-          <Text style={[styles.blockTitle, { color: palette.foreground }]}>更新</Text>
+          <Text style={[styles.blockTitle, { color: palette.foreground }]}>文章内容</Text>
+          <Text style={{color:palette.foregroundMuted,fontSize:13,lineHeight:22,marginBottom:12}}>{getAllArticles().length} 篇 · 内容包 {new Date(content.updatedAt).toLocaleDateString('zh-CN')}{"\n"}{content.message}</Text>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="更新文章内容" onPress={content.refresh} disabled={content.refreshing} style={[styles.updateBtn,{backgroundColor:palette.primarySoft}]}>
+            <RefreshCw size={16} color={palette.primary}/><Text style={[styles.updateBtnText,{color:palette.primary}]}>{content.refreshing?'正在同步…':'同步网站文章'}</Text>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <Text style={[styles.blockTitle, { color: palette.foreground }]}>应用版本</Text>
           <TouchableOpacity
             onPress={handleCheckUpdate}
             disabled={checking}

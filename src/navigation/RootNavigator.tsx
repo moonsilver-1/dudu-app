@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -25,6 +26,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function Tabs() {
+  const insets = useSafeAreaInsets();
   const { mode } = useTheme();
   const palette = paletteFor(mode);
   return (
@@ -32,12 +34,13 @@ function Tabs() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: palette.primary,
+        tabBarActiveBackgroundColor: palette.primarySoft,
         tabBarInactiveTintColor: palette.foregroundSubtle,
           tabBarStyle: {
             backgroundColor: palette.surface,
             borderTopColor: palette.divider,
-            height: 70,
-            paddingBottom: 10,
+            height: 64 + insets.bottom,
+            paddingBottom: Math.max(insets.bottom, 8),
             paddingTop: 8,
           },
           tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },

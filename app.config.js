@@ -3,7 +3,7 @@ const config = {
   slug: "dudu",
   owner: "moonsilver-1s-team",
   scheme: "dudu",
-  version: "1.0.5",
+  version: "1.1.0",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   newArchEnabled: false,
@@ -17,6 +17,7 @@ const config = {
   ios: { supportsTablet: false, bundleIdentifier: "com.hduwiki.dudu" },
   android: {
     package: "com.hduwiki.dudu",
+    versionCode: 7,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#0B1220",

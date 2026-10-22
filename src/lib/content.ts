@@ -53,6 +53,8 @@ export interface CategoryGroup {
 }
 
 export interface ContentData {
+  schemaVersion: 1;
+  version: string;
   generatedAt: string;
   articles: Article[];
   categories: Record<string, CategoryGroup>;
@@ -61,14 +63,26 @@ export interface ContentData {
   total: number;
 }
 
-const data = contentJson as unknown as ContentData;
+let data = contentJson as unknown as ContentData;
+let articleIndex = new Map(data.articles.map(article => [article.slug, article]));
+const searchBodies = new Map<string, string>();
+export const getContentVersion = () => data.version;
+export const getContentDate = () => data.generatedAt;
+export function replaceContent(next: ContentData) {
+  data = next;
+  articleIndex = new Map(next.articles.map(article => [article.slug, article]));
+  searchBodies.clear();
+}
+export const articleUrl = (article: Pick<ArticleMeta, 'category' | 'slug'>) =>
+  `https://www.hdu-wiki.cn/${article.category}/${encodeURIComponent(article.slug)}`;
+
 
 // ---- 访问器 ----
 export const getAllArticles = (): Article[] => data.articles;
 export const getArticleCount = (): number => data.total;
 
 export const getArticle = (slug: string): Article | undefined =>
-  data.articles.find((a) => a.slug === slug);
+  articleIndex.get(slug);
 
 export const getCategory = (slug: string): CategoryGroup | undefined =>
   data.categories[slug];
@@ -85,7 +99,9 @@ export const getCourseVolumes = (category: string): CourseVolume[] =>
 export const getAdjacent = (
   slug: string
 ): { prev?: ArticleMeta; next?: ArticleMeta } => {
-  const flat = data.articles;
+  const article = articleIndex.get(slug);
+  if (!article) return {};
+  const flat = data.articles.filter(a => a.category === article.category && a.section === article.section);
   const idx = flat.findIndex((a) => a.slug === slug);
   if (idx === -1) return {};
   const prev = idx > 0 ? flat[idx - 1] : undefined;
@@ -102,6 +118,7 @@ export interface SearchHit {
 
 const stripHtml = (html: string): string =>
   html
+    .replace(/<math[\s\S]*?<\/math>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&[a-z]+;/gi, " ")
@@ -118,7 +135,8 @@ export const search = (query: string, limit = 30): SearchHit[] => {
     const title = (article.title ?? "").toLowerCase();
     const excerpt = (article.excerpt ?? "").toLowerCase();
     const tags = (article.tags ?? []).join(" ").toLowerCase();
-    const body = stripHtml(article.html).toLowerCase().slice(0, 4000);
+    let body = searchBodies.get(article.slug);
+    if (body === undefined) { body = stripHtml(article.html).toLowerCase(); searchBodies.set(article.slug, body); }
     const cat = (article.category ?? "").toLowerCase();
 
     let score = 0;
@@ -137,7 +155,9 @@ export const search = (query: string, limit = 30): SearchHit[] => {
     if (score <= 0) continue;
 
     let snippet = "";
-    if (matchedBodyIdx >= 0) {
+    if (title.includes(q) && excerpt) {
+      snippet = article.excerpt ?? "";
+    } else if (matchedBodyIdx >= 0) {
       const start = Math.max(0, matchedBodyIdx - 30);
       snippet =
         (start > 0 ? "…" : "") +

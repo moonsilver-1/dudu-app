@@ -41,3 +41,6 @@ build*.log
 metro*.log
 eas_build.log
 build_out.log
+
+output/
+dist-android/

@@ -1,7 +1,8 @@
+import { useContent } from "../context/ContentContext";
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Bookmark } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
 import { spacing, fontSize } from "../theme";
@@ -11,11 +12,12 @@ import { ScreenHeader, EmptyState } from "../components/ui";
 import { ArticleCard } from "../components/ArticleCard";
 
 export default function FavoritesScreen() {
+  const { version: contentVersion } = useContent();
   const { palette } = useTheme();
   const navigation = useNavigation<any>();
   const [articles, setArticles] = useState<{ article: Article; progress: number }[]>([]);
 
-  useEffect(() => {
+  useFocusEffect(React.useCallback(() => {
     let active = true;
     (async () => {
       const slugs = await getFavorites();
@@ -31,7 +33,7 @@ export default function FavoritesScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [contentVersion]));
 
   const openArticle = (slug: string) => navigation.navigate("Article", { slug });
 

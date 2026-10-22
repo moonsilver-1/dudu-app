@@ -1,3 +1,4 @@
+import { useContent } from "../context/ContentContext";
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useTheme } from "../context/ThemeContext";
 import { radius, spacing, fontSize, fontFamily } from "../theme";
 import {
+  articleUrl,
   getArticle,
   getAdjacent,
   type Article,
@@ -27,12 +29,13 @@ import {
   type TocItem,
 } from "../lib/content";
 import { isFavorite, toggleFavorite, setProgress, getProgress } from "../lib/storage";
-import { ArticleDocument } from "../components/ArticleDocument";
+import { ArticleDocument, type ReaderHandle } from "../components/ArticleDocument";
 import { ReadingSettingsPanel } from "../components/ReadingSettingsPanel";
 import { ShareCard } from "../components/ShareCard";
 import { Pill, EmptyState } from "../components/ui";
 
 export function ArticleScreen() {
+  useContent();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const slug: string = route.params?.slug ?? "";
@@ -51,9 +54,13 @@ export function ArticleScreen() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxRatio = useRef(0);
+  const reader = useRef<ReaderHandle>(null);
+  const [initialProgress, setInitialProgress] = useState<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
+    setInitialProgress(null);
+    maxRatio.current = 0;
     (async () => {
       const fav = await isFavorite(slug);
       const all = await getProgress();
@@ -62,9 +69,12 @@ export function ArticleScreen() {
       const saved = all[slug] ?? 0;
       maxRatio.current = saved;
       setProgressRatio(saved);
+      setInitialProgress(saved);
     })();
     return () => {
       mounted = false;
+      if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+      void setProgress(slug, maxRatio.current);
     };
   }, [slug]);
 
@@ -93,7 +103,7 @@ export function ArticleScreen() {
       {
         text: "复制链接 🔗",
         onPress: async () => {
-          const link = "https://hdu-wiki.cn/article/" + slug;
+          const link = article ? articleUrl(article) : "https://www.hdu-wiki.cn";
           await Clipboard.setStringAsync(link);
           Alert.alert("已复制", "文章链接已复制到剪贴板");
         },
@@ -103,7 +113,15 @@ export function ArticleScreen() {
   };
 
   const handleLinkPress = (url: string) => {
-    if (url.startsWith("http")) void WebBrowser.openBrowserAsync(url);
+    try {
+      const target = new URL(url);
+      if (['www.hdu-wiki.cn','hdu-wiki.cn'].includes(target.hostname)) {
+        const [category, articleSlug] = target.pathname.split('/').filter(Boolean);
+        const match = getArticle(decodeURIComponent(articleSlug ?? ''));
+        if (match?.category === category) { navigation.navigate('Article', {slug:match.slug}); return; }
+      }
+      if (['https:','http:'].includes(target.protocol)) void WebBrowser.openBrowserAsync(url);
+    } catch { /* Ignore malformed article links. */ }
   };
 
   const navigateTo = (nextSlug: string) => {
@@ -113,7 +131,7 @@ export function ArticleScreen() {
   };
 
   const handleTocPress = (item: TocItem) => {
-    // TODO: 完整锚点滚动需要 WebView bridge（注入 scrollIntoView），当前超出范围；这里仅高亮并关闭抽屉。
+    reader.current?.scrollToAnchor(item.id);
     setActiveToc(item.id);
     setDrawerOpen(false);
   };
@@ -121,9 +139,9 @@ export function ArticleScreen() {
   const iconBtn = (
     Icon: LucideIcon,
     color: string,
-    onPress?: () => void
+    onPress?: () => void, label?: string
   ) => (
-    <TouchableOpacity onPress={onPress} hitSlop={10} style={styles.iconBtn}>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={label} onPress={onPress} hitSlop={10} style={styles.iconBtn}>
       <Icon size={22} color={color} />
     </TouchableOpacity>
   );
@@ -145,21 +163,21 @@ export function ArticleScreen() {
 
       {/* 顶部栏 */}
       <View style={[styles.topBar, { borderColor: palette.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={10} accessibilityLabel="返回" accessibilityRole="button" style={styles.iconBtn}>
           <ArrowLeft size={24} color={palette.foreground} />
         </TouchableOpacity>
         <Text style={[styles.topTitle, { color: palette.foreground }]} numberOfLines={1}>{article.title}</Text>
         <View style={styles.topActions}>
-          {iconBtn(isFav ? BookmarkCheck : Bookmark, isFav ? palette.primary : palette.foregroundMuted, handleFavorite)}
-          {iconBtn(List, palette.foregroundMuted, () => setDrawerOpen(true))}
-          {iconBtn(Type, palette.foregroundMuted, () => setReadingPanelOpen(true))}
-          {iconBtn(Share2, palette.foregroundMuted, handleShare)}
-          {iconBtn(mode === "dark" ? Sun : Moon, palette.foregroundMuted, toggle)}
+          {iconBtn(isFav ? BookmarkCheck : Bookmark, isFav ? palette.primary : palette.foregroundMuted, handleFavorite, "收藏文章")}
+          {iconBtn(Share2, palette.foregroundMuted, handleShare, "分享文章")}
         </View>
       </View>
 
       {/* 正文：标题/作者/标签 全部注入 WebView 内渲染，WebView 自己滚动，占满剩余空间 */}
-      <ArticleDocument
+      {initialProgress !== null ? <ArticleDocument
+        key={slug}
+        ref={reader}
+        initialProgress={initialProgress}
         html={article.html}
         title={article.title}
         author={article.author}
@@ -167,7 +185,7 @@ export function ArticleScreen() {
         tags={article.tags}
         onScrollRatio={handleScrollRatio}
         onLinkPress={handleLinkPress}
-      />
+      /> : <View style={{flex:1}} />}
 
       {/* 底部上下篇 */}
       <View style={[styles.bottomBar, { borderColor: palette.border, backgroundColor: palette.surface }]}>
@@ -179,6 +197,9 @@ export function ArticleScreen() {
           <ChevronLeft size={18} color={adjacent.prev ? palette.primary : palette.foregroundSubtle} />
           <Text style={{ color: adjacent.prev ? palette.primary : palette.foregroundSubtle, fontSize: fontSize.sm }}>上一篇</Text>
         </TouchableOpacity>
+        {iconBtn(List, palette.primary, () => setDrawerOpen(true), "文章目录")}
+        {iconBtn(Type, palette.foregroundMuted, () => setReadingPanelOpen(true), "阅读设置")}
+        {iconBtn(mode === "dark" ? Sun : Moon, palette.foregroundMuted, toggle, "切换主题")}
         <TouchableOpacity
           disabled={!adjacent.next}
           onPress={() => adjacent.next && navigateTo(adjacent.next.slug)}
@@ -241,12 +262,13 @@ const styles = StyleSheet.create({
   },
   topTitle: { flex: 1, fontSize: fontSize.md, fontWeight: "700" },
   topActions: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
-  iconBtn: { padding: 4, alignItems: "center", justifyContent: "center" },
+  iconBtn: { minWidth: 40, minHeight: 44, padding: 8, alignItems: "center", justifyContent: "center" },
   title: { fontSize: fontSize.xxl, fontWeight: "800", lineHeight: 30 },
   metaRow: { flexDirection: "row", gap: spacing.lg, marginTop: spacing.xs },
   metaText: { fontSize: fontSize.sm },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: spacing.sm },
   bottomBar: {
+    alignItems: "center",
     flexDirection: "row",
     borderTopWidth: StyleSheet.hairlineWidth,
   },

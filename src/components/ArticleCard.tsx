@@ -2,22 +2,23 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Clock, User, ArrowUpRight } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
-import { radius, spacing, fontSize } from "../theme";
+import { radius, spacing, fontSize, categoryMeta, categoryAccent } from "../theme";
 import type { ArticleMeta } from "../lib/content";
 import { Pill } from "./ui";
 
 export function ArticleCard({ article, onPress, accent, progress, featured = false }: { article: ArticleMeta; onPress: () => void; accent?: string; progress?: number; featured?: boolean }) {
   const { palette } = useTheme();
-  const barColor = accent ?? palette.primary;
-  return <TouchableOpacity activeOpacity={0.82} onPress={onPress}>
+  const barColor = accent ?? palette[categoryAccent[article.category] ?? "primary"];
+  return <TouchableOpacity accessibilityRole="button" accessibilityLabel={article.title} activeOpacity={0.82} onPress={onPress}>
     <View style={[styles.card, featured && styles.featured, { backgroundColor: palette.surface, borderColor: palette.divider }]}>
+      <View style={styles.categoryLine}><Text style={{color:barColor,fontSize:10,fontWeight:"700",letterSpacing:1}}>{categoryMeta[article.category]?.name ?? article.category}</Text><ArrowUpRight size={14} color={palette.foregroundSubtle}/></View>
       <View style={styles.heading}>
         <Text style={[featured ? styles.featuredTitle : styles.title, { color: palette.foreground }]} numberOfLines={featured ? 3 : 2}>{article.title}</Text>
         {featured ? <ArrowUpRight size={20} color={barColor} /> : null}
       </View>
       {article.excerpt ? <Text style={[styles.excerpt, { color: palette.foregroundMuted }]} numberOfLines={featured ? 3 : 2}>{article.excerpt}</Text> : null}
       <View style={styles.meta}>
-        {article.author ? <View style={styles.metaItem}><User size={12} color={palette.foregroundSubtle} /><Text style={[styles.metaText, { color: palette.foregroundSubtle }]}>{article.author}</Text></View> : null}
+        {article.author ? <View style={styles.metaItem}><User size={12} color={palette.foregroundSubtle} /><Text numberOfLines={1} style={[styles.metaText, { color: palette.foregroundSubtle, flexShrink: 1 }]}>{article.author}</Text></View> : null}
         {article.readingTime ? <View style={styles.metaItem}><Clock size={12} color={palette.foregroundSubtle} /><Text style={[styles.metaText, { color: palette.foregroundSubtle }]}>{article.readingTime} 分钟阅读</Text></View> : null}
       </View>
       {article.tags.length > 0 && !featured ? <View style={styles.tags}>{article.tags.slice(0, 2).map((t) => <Pill key={t} label={t} />)}</View> : null}
@@ -27,14 +28,15 @@ export function ArticleCard({ article, onPress, accent, progress, featured = fal
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: spacing.lg, gap: spacing.sm },
+  categoryLine: {flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginBottom:2},
+  card: { borderRadius: 20, borderWidth: StyleSheet.hairlineWidth, padding: 20, gap: 10 },
   featured: { padding: spacing.xl, minHeight: 190 },
   heading: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
-  title: { flex: 1, fontSize: fontSize.lg, fontWeight: "700", lineHeight: 23 },
+  title: { flex: 1, fontSize: fontSize.lg, fontWeight: "700", lineHeight: 27 },
   featuredTitle: { flex: 1, fontSize: 22, fontWeight: "800", lineHeight: 29, letterSpacing: -0.25 },
   excerpt: { fontSize: fontSize.sm, lineHeight: 20 },
-  meta: { flexDirection: "row", gap: spacing.lg, marginTop: 2 },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  meta: { flexDirection: "row", flexWrap:"wrap", gap: spacing.lg, marginTop: 2 },
+  metaItem: { maxWidth:"65%", flexDirection: "row", alignItems: "center", gap: 4 },
   metaText: { fontSize: fontSize.xs },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: 2 },
   progressTrack: { height: 3, borderRadius: radius.full, marginTop: spacing.xs, overflow: "hidden" },
