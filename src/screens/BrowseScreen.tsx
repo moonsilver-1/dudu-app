@@ -1,10 +1,11 @@
+import { useContent } from "../context/ContentContext";
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { ChevronRight, ChevronDown, BookOpen, Layers } from "lucide-react-native";
+import { ChevronRight, ChevronDown } from "lucide-react-native";
 import { useTheme } from "../context/ThemeContext";
-import { radius, spacing, fontSize, fontFamily } from "../theme";
+import { radius, spacing, fontSize, categoryMeta } from "../theme";
 import {
   getCategories,
   getCategory,
@@ -12,7 +13,7 @@ import {
   getArticle,
   type ArticleMeta,
 } from "../lib/content";
-import { Card, ScreenHeader } from "../components/ui";
+import { ScreenHeader } from "../components/ui";
 import { ArticleCard } from "../components/ArticleCard";
 
 const accentFor: Record<string, string> = {
@@ -23,6 +24,7 @@ const accentFor: Record<string, string> = {
 };
 
 export default function BrowseScreen() {
+  useContent();
   const { palette } = useTheme();
   const navigation: any = useNavigation();
   const route: any = useRoute();
@@ -50,16 +52,15 @@ export default function BrowseScreen() {
             return (
               <TouchableOpacity
                 key={cat.slug}
+                accessibilityRole="button"
+                accessibilityLabel={`${cat.name}，${cat.articles.length}篇`}
                 activeOpacity={0.9}
                 onPress={() => navigation.navigate("Browse", { category: cat.slug })}
                 style={[styles.catRow, { backgroundColor: palette.surface, borderColor: palette.border }]}
               >
-                <View style={[styles.catRowIcon, { backgroundColor: accent + "1A" }]}>
-                  <BookOpen size={22} color={accent} />
-                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.catRowName, { color: palette.foreground }]}>{cat.name}</Text>
-                  <Text style={[styles.catRowDesc, { color: palette.foregroundMuted }]}>{cat.desc}</Text>
+                  <Text style={[styles.catRowDesc, { color: palette.foregroundMuted }]}>{categoryMeta[cat.slug]?.desc ?? cat.desc}</Text>
                 </View>
                 <View style={styles.catRowFoot}>
                   <Text style={[styles.catRowCount, { color: accent }]}>{cat.articles.length} 篇</Text>
@@ -92,7 +93,7 @@ export default function BrowseScreen() {
         title={category.name}
         subtitle={category.desc}
         right={
-          <TouchableOpacity onPress={() => navigation.navigate("Browse")}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="查看全部分类" onPress={() => navigation.navigate("Browse", { category: undefined })}>
             <Text style={{ color: palette.primary, fontWeight: "600" }}>全部</Text>
           </TouchableOpacity>
         }
@@ -104,12 +105,14 @@ export default function BrowseScreen() {
         {volumes.length > 0 ? (
           <View>
             <Text style={[styles.blockTitle, { color: palette.foreground }]}>
-              <Layers size={16} color={accent} /> 分卷
+              分卷
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.xs }}>
               {volumes.map((v) => (
                 <TouchableOpacity
                   key={v.key}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: activeVolume === v.key }}
                   activeOpacity={0.9}
                   onPress={() => setActiveVolume(activeVolume === v.key ? null : v.key)}
                   style={[
@@ -117,7 +120,7 @@ export default function BrowseScreen() {
                     { backgroundColor: activeVolume === v.key ? accent : palette.surfaceMuted, borderColor: palette.border },
                   ]}
                 >
-                  <Text style={{ color: activeVolume === v.key ? "#fff" : palette.foreground, fontWeight: "600", fontSize: fontSize.sm }}>
+                  <Text style={{ color: activeVolume === v.key ? palette.onPrimary : palette.foreground, fontWeight: "600", fontSize: fontSize.sm }}>
                     {v.title}
                   </Text>
                 </TouchableOpacity>
@@ -178,6 +181,9 @@ function CollapsibleSection({
   return (
     <View>
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel={`${title}，${count}篇`}
+        accessibilityState={{ expanded: open }}
         activeOpacity={0.7}
         onPress={() => setOpen((v) => !v)}
         style={[styles.sectionHeader, { borderColor: palette.border }]}
@@ -210,7 +216,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: spacing.lg,
   },
-  catRowIcon: { width: 44, height: 44, borderRadius: radius.md, alignItems: "center", justifyContent: "center" },
   catRowName: { fontSize: fontSize.lg, fontWeight: "700" },
   catRowDesc: { fontSize: fontSize.sm, marginTop: 2 },
   catRowFoot: { flexDirection: "row", alignItems: "center", gap: spacing.sm },

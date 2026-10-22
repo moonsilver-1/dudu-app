@@ -1,42 +1,42 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Clock, User, ArrowUpRight } from "lucide-react-native";
-import { useTheme } from "../context/ThemeContext";
-import { radius, spacing, fontSize } from "../theme";
-import type { ArticleMeta } from "../lib/content";
-import { Pill } from "./ui";
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
+import { categoryMeta } from '../theme';
+import type { ArticleMeta } from '../lib/content';
 
 export function ArticleCard({ article, onPress, accent, progress, featured = false }: { article: ArticleMeta; onPress: () => void; accent?: string; progress?: number; featured?: boolean }) {
   const { palette } = useTheme();
-  const barColor = accent ?? palette.primary;
-  return <TouchableOpacity activeOpacity={0.82} onPress={onPress}>
-    <View style={[styles.card, featured && styles.featured, { backgroundColor: palette.surface, borderColor: palette.divider }]}>
-      <View style={styles.heading}>
+  const ink = accent ?? palette.primary;
+  return (
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel={article.title} activeOpacity={0.82} onPress={onPress}>
+      <View style={[styles.card, featured && styles.featured, { backgroundColor: palette.surface, borderColor: palette.border }]}>
+        <Text style={[styles.category, { color: ink }]}>{categoryMeta[article.category]?.name ?? article.category}</Text>
         <Text style={[featured ? styles.featuredTitle : styles.title, { color: palette.foreground }]} numberOfLines={featured ? 3 : 2}>{article.title}</Text>
-        {featured ? <ArrowUpRight size={20} color={barColor} /> : null}
+        {article.excerpt ? <Text style={[styles.excerpt, { color: palette.foregroundMuted }]} numberOfLines={featured ? 3 : 2}>{article.excerpt}</Text> : null}
+        <View style={styles.meta}>
+          {article.author ? <Text numberOfLines={1} style={[styles.author, styles.metaText, { color: palette.foregroundSubtle }]}>{article.author}</Text> : null}
+          {article.readingTime ? <Text style={[styles.metaText, { color: palette.foregroundSubtle }]}>{article.readingTime} 分钟</Text> : null}
+        </View>
+        {typeof progress === 'number' && progress > 0 ? (
+          <View style={[styles.progressTrack, { backgroundColor: palette.surfaceMuted }]}>
+            <View style={[styles.progressBar, { width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`, backgroundColor: ink }]} />
+          </View>
+        ) : null}
       </View>
-      {article.excerpt ? <Text style={[styles.excerpt, { color: palette.foregroundMuted }]} numberOfLines={featured ? 3 : 2}>{article.excerpt}</Text> : null}
-      <View style={styles.meta}>
-        {article.author ? <View style={styles.metaItem}><User size={12} color={palette.foregroundSubtle} /><Text style={[styles.metaText, { color: palette.foregroundSubtle }]}>{article.author}</Text></View> : null}
-        {article.readingTime ? <View style={styles.metaItem}><Clock size={12} color={palette.foregroundSubtle} /><Text style={[styles.metaText, { color: palette.foregroundSubtle }]}>{article.readingTime} 分钟阅读</Text></View> : null}
-      </View>
-      {article.tags.length > 0 && !featured ? <View style={styles.tags}>{article.tags.slice(0, 2).map((t) => <Pill key={t} label={t} />)}</View> : null}
-      {typeof progress === "number" && progress > 0 ? <View style={[styles.progressTrack, { backgroundColor: palette.surfaceMuted }]}><View style={[styles.progressBar, { width: `${Math.round(progress * 100)}%`, backgroundColor: barColor }]} /></View> : null}
-    </View>
-  </TouchableOpacity>;
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, padding: spacing.lg, gap: spacing.sm },
-  featured: { padding: spacing.xl, minHeight: 190 },
-  heading: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
-  title: { flex: 1, fontSize: fontSize.lg, fontWeight: "700", lineHeight: 23 },
-  featuredTitle: { flex: 1, fontSize: 22, fontWeight: "800", lineHeight: 29, letterSpacing: -0.25 },
-  excerpt: { fontSize: fontSize.sm, lineHeight: 20 },
-  meta: { flexDirection: "row", gap: spacing.lg, marginTop: 2 },
-  metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  metaText: { fontSize: fontSize.xs },
-  tags: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs, marginTop: 2 },
-  progressTrack: { height: 3, borderRadius: radius.full, marginTop: spacing.xs, overflow: "hidden" },
-  progressBar: { height: 3, borderRadius: radius.full },
+  card: { borderRadius: 10, borderWidth: StyleSheet.hairlineWidth, padding: 18, gap: 8 },
+  featured: { padding: 22, minHeight: 180 },
+  category: { fontSize: 11, lineHeight: 16 },
+  title: { fontSize: 17, fontWeight: '700', lineHeight: 26 },
+  featuredTitle: { fontSize: 22, fontWeight: '700', lineHeight: 31 },
+  excerpt: { fontSize: 13, lineHeight: 21 },
+  meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginTop: 4 },
+  author: { flex: 1 },
+  metaText: { fontSize: 11, lineHeight: 16 },
+  progressTrack: { height: 3, borderRadius: 2, marginTop: 4, overflow: 'hidden' },
+  progressBar: { height: 3, borderRadius: 2 },
 });

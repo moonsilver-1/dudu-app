@@ -37,7 +37,7 @@ export function ReadingSettingsPanel({
         >
           <View style={styles.header}>
             <Text style={[styles.title, { color: palette.foreground }]}>阅读设置</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={10}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="关闭阅读设置" onPress={onClose} hitSlop={10}>
               <X size={22} color={palette.foregroundMuted} />
             </TouchableOpacity>
           </View>

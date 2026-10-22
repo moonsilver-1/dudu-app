@@ -1,3 +1,4 @@
+import { ContentProvider } from "./src/context/ContentContext";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -14,14 +15,15 @@ function Bar() {
 
 export default function App() {
   const [splashVisible, setSplashVisible] = React.useState(true);
+  const dismissSplash = React.useCallback(() => setSplashVisible(false), []);
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
         <ThemeProvider>
           <ReadingSettingsProvider>
-            <RootNavigator />
+            <ContentProvider><RootNavigator /></ContentProvider>
             <Bar />
-            {splashVisible ? <AppSplash onDone={() => setSplashVisible(false)} /> : null}
+            {splashVisible ? <AppSplash onDone={dismissSplash} /> : null}
           </ReadingSettingsProvider>
         </ThemeProvider>
       </SafeAreaProvider>

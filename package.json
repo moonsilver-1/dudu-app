@@ -1,6 +1,6 @@
 {
   "name": "dudu-app",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "node_modules/expo/AppEntry.js",
   "description": "DUDU（嘟嘟）— 基于 HDU Wiki 内容的安卓阅读器",
   "scripts": {
@@ -11,10 +11,13 @@
     "prebuild": "npm run build:content",
     "typecheck": "tsc --noEmit",
     "ios": "expo run:ios",
-    "release": "scripts\\release.bat"
+    "release": "scripts\\release.bat",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test && expo export --platform android --output-dir dist-android && expo export --platform web"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "2.1.2",
+    "@expo/metro-runtime": "~4.0.1",
+    "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/native-stack": "^7.3.8",
@@ -30,16 +33,19 @@
     "expo-web-browser": "~14.0.2",
     "lucide-react-native": "^0.469.0",
     "react": "18.3.1",
+    "react-dom": "^18.3.1",
     "react-native": "0.76.9",
     "react-native-qrcode-svg": "^6.3.21",
-    "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.10.0",
-    "react-native-svg": "15.15.5",
-    "react-native-view-shot": "^5.1.1",
-    "react-native-webview": "13.13.4"
+    "react-native-safe-area-context": "^4.12.0",
+    "react-native-screens": "~4.4.0",
+    "react-native-svg": "^15.8.0",
+    "react-native-view-shot": "~4.0.3",
+    "react-native-web": "^0.19.13",
+    "react-native-webview": "^13.12.5"
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.2"
   },
   "private": true

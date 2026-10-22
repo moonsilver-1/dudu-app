@@ -1,19 +1,21 @@
+import { useContent } from "../context/ContentContext";
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Sun, Moon, MoonStar, Info, Github, BookOpen, RefreshCw, Download, Upload, Share2, Clock4 } from "lucide-react-native";
+import { RefreshCw, Download, Upload } from "lucide-react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import * as DocumentPicker from "expo-document-picker";
 import { useTheme } from "../context/ThemeContext";
-import { radius, spacing, fontSize, fontFamily } from "../theme";
+import { radius, spacing, fontSize } from "../theme";
 import { getAllArticles } from "../lib/content";
 import { getReadSet, exportBackup, importBackup, type BackupData } from "../lib/storage";
 import { Card, ScreenHeader, Pill } from "../components/ui";
 import { checkForUpdate, LOCAL_VERSION } from "../lib/update";
 
 export default function SettingsScreen() {
+  const content = useContent();
   const { palette, mode, setPref, pref } = useTheme();
   const [readCount, setReadCount] = useState(0);
   const [checking, setChecking] = useState(false);
@@ -39,7 +41,7 @@ export default function SettingsScreen() {
       changelog: result.remote?.changelog,
     });
     if (!result.hasUpdate) {
-      Alert.alert("已是最新版本 ✨", `当前版本 v${LOCAL_VERSION}`);
+      Alert.alert("已是最新版本", `当前版本 v${LOCAL_VERSION}`);
     }
   };
 
@@ -94,7 +96,7 @@ export default function SettingsScreen() {
             onPress: async () => {
               try {
                 await importBackup(data);
-                Alert.alert("导入成功 ✅", "请重新打开 App 让设置生效");
+                Alert.alert("导入成功", "请重新打开 App 让设置生效");
               } catch (err: any) {
                 Alert.alert("导入失败", String(err?.message || err));
               }
@@ -108,16 +110,13 @@ export default function SettingsScreen() {
   };
 
   const Row = ({
-    icon,
     label,
     value,
   }: {
-    icon: React.ReactNode;
     label: string;
     value?: string;
   }) => (
     <View style={[styles.row, { borderColor: palette.border }]}>
-      <View style={styles.rowIcon}>{icon}</View>
       <Text style={[styles.rowLabel, { color: palette.foreground }]}>{label}</Text>
       {value ? <Text style={[styles.rowValue, { color: palette.foregroundMuted }]}>{value}</Text> : null}
     </View>
@@ -125,49 +124,53 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.background }}>
-      <ScreenHeader title="我的" subtitle="嘟嘟 DUDU · HDU 知识库" />
+      <ScreenHeader title="我的" />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Card style={styles.profile}>
           <Text style={styles.emoji}>🐑</Text>
-          <Text style={[styles.profileName, { color: palette.foreground }]}>嘟嘟 DUDU</Text>
-          <Text style={[styles.profileSub, { color: palette.foregroundMuted }]}>电子科技大学知识库离线阅读器</Text>
+          <Text style={[styles.profileName, { color: palette.foreground }]}>嘟嘟</Text>
+          <Text style={[styles.profileSub, { color: palette.foregroundMuted }]}>杭电 Wiki · 离线阅读</Text>
         </Card>
 
         <Card>
           <Text style={[styles.blockTitle, { color: palette.foreground }]}>外观</Text>
           <View style={styles.themeRow}>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ selected: pref === "light" }}
               onPress={() => setPref("light")}
               style={[styles.themeBtn, { backgroundColor: pref === "light" ? palette.primarySoft : palette.surfaceMuted }]}
             >
-              <Sun size={18} color={palette.foreground} />
               <Text style={[styles.themeText, { color: palette.foreground }]}>浅色</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ selected: pref === "dark" }}
               onPress={() => setPref("dark")}
               style={[styles.themeBtn, { backgroundColor: pref === "dark" ? palette.primarySoft : palette.surfaceMuted }]}
             >
-              <Moon size={18} color={palette.foreground} />
               <Text style={[styles.themeText, { color: palette.foreground }]}>深色</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ selected: pref === "system" }}
               onPress={() => setPref("system")}
               style={[styles.themeBtn, { backgroundColor: pref === "system" ? palette.primarySoft : palette.surfaceMuted }]}
             >
-              <MoonStar size={18} color={palette.foreground} />
               <Text style={[styles.themeText, { color: palette.foreground }]}>跟随系统</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ selected: pref === "auto" }}
               onPress={() => setPref("auto")}
               style={[styles.themeBtn, { backgroundColor: pref === "auto" ? palette.primarySoft : palette.surfaceMuted }]}
             >
-              <Clock4 size={18} color={palette.foreground} />
               <Text style={[styles.themeText, { color: palette.foreground }]}>自动</Text>
             </TouchableOpacity>
           </View>
           {pref === "auto" ? (
             <Text style={[styles.autoHint, { color: palette.foregroundMuted }]}>
-              晚上 8 点到早上 7 点自动切换深色 🌙
+              晚上 8 点到早上 7 点自动切换深色
             </Text>
           ) : null}
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: spacing.sm }}>
@@ -177,15 +180,23 @@ export default function SettingsScreen() {
 
         <Card>
           <Text style={[styles.blockTitle, { color: palette.foreground }]}>关于</Text>
-          <Row icon={<BookOpen size={18} color={palette.foregroundMuted} />} label="文章总数" value={`${getAllArticles().length}`} />
-          <Row icon={<Info size={18} color={palette.foregroundMuted} />} label="已读文章" value={`${readCount}`} />
-          <Row icon={<Github size={18} color={palette.foregroundMuted} />} label="数据来源" value="HDU Wiki" />
-          <Row icon={<Info size={18} color={palette.foregroundMuted} />} label="版本" value={`v${LOCAL_VERSION}`} />
+          <Row label="文章总数" value={`${getAllArticles().length}`} />
+          <Row label="已读文章" value={`${readCount}`} />
+          <Row label="数据来源" value="HDU Wiki" />
+          <Row label="版本" value={`v${LOCAL_VERSION}`} />
         </Card>
 
         <Card>
-          <Text style={[styles.blockTitle, { color: palette.foreground }]}>更新</Text>
+          <Text style={[styles.blockTitle, { color: palette.foreground }]}>文章内容</Text>
+          <Text style={{color:palette.foregroundMuted,fontSize:13,lineHeight:22,marginBottom:12}}>{getAllArticles().length} 篇 · 内容包 {new Date(content.updatedAt).toLocaleDateString('zh-CN')}{"\n"}{content.message}</Text>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="更新文章内容" onPress={content.refresh} disabled={content.refreshing} style={[styles.updateBtn,{backgroundColor:palette.primarySoft}]}>
+            <RefreshCw size={16} color={palette.primary}/><Text style={[styles.updateBtnText,{color:palette.primary}]}>{content.refreshing?'正在同步…':'同步网站文章'}</Text>
+          </TouchableOpacity>
+        </Card>
+        <Card>
+          <Text style={[styles.blockTitle, { color: palette.foreground }]}>应用版本</Text>
           <TouchableOpacity
+            accessibilityRole="button"
             onPress={handleCheckUpdate}
             disabled={checking}
             style={[styles.updateBtn, { backgroundColor: palette.primarySoft }]}
@@ -203,7 +214,7 @@ export default function SettingsScreen() {
           {updateInfo?.hasUpdate && updateInfo.url ? (
             <View style={[styles.updateBox, { borderColor: palette.primary, backgroundColor: palette.primarySoft }]}>
               <Text style={[styles.updateNewVer, { color: palette.primary }]}>
-                发现新版本 v{updateInfo.version} 🎉
+                新版本 v{updateInfo.version}
               </Text>
               {updateInfo.changelog ? (
                 <Text style={[styles.updateChangelog, { color: palette.foreground }]}>
@@ -211,11 +222,12 @@ export default function SettingsScreen() {
                 </Text>
               ) : null}
               <TouchableOpacity
+                accessibilityRole="button"
                 onPress={() => openDownload(updateInfo.url!)}
                 style={[styles.downloadBtn, { backgroundColor: palette.primary }]}
               >
-                <Download size={16} color="#fff" />
-                <Text style={styles.downloadBtnText}>下载新版 APK</Text>
+                <Download size={16} color={palette.onPrimary} />
+                <Text style={[styles.downloadBtnText, { color: palette.onPrimary }]}>下载新版 APK</Text>
               </TouchableOpacity>
               <Text style={[styles.updateHint, { color: palette.foregroundMuted }]}>
                 下载后点开安装，覆盖即可（收藏/进度会保留）
@@ -231,6 +243,7 @@ export default function SettingsScreen() {
           </Text>
           <View style={styles.backupRow}>
             <TouchableOpacity
+              accessibilityRole="button"
               onPress={handleExport}
               style={[styles.backupBtn, { backgroundColor: palette.primarySoft }]}
             >
@@ -238,6 +251,7 @@ export default function SettingsScreen() {
               <Text style={[styles.backupBtnText, { color: palette.primary }]}>导出备份</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
               onPress={handleImport}
               style={[styles.backupBtn, { backgroundColor: palette.surfaceMuted }]}
             >
@@ -266,6 +280,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     borderRadius: radius.md,
+    minHeight: 44,
     paddingVertical: spacing.sm,
   },
   themeText: { fontSize: fontSize.sm, fontWeight: "600" },
@@ -277,7 +292,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  rowIcon: { width: 24, alignItems: "center" },
   rowLabel: { flex: 1, fontSize: fontSize.md },
   rowValue: { fontSize: fontSize.sm },
   updateBtn: {
@@ -307,7 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     marginTop: spacing.xs,
   },
-  downloadBtnText: { color: "#fff", fontSize: fontSize.sm, fontWeight: "700" },
+  downloadBtnText: { fontSize: fontSize.sm, fontWeight: "700" },
   updateHint: { fontSize: fontSize.xs, marginTop: 2 },
   backupHint: { fontSize: fontSize.sm, lineHeight: 20, marginBottom: spacing.md },
   backupRow: { flexDirection: "row", gap: spacing.sm },
